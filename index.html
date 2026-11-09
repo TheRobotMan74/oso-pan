@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#8a4b1f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Oso Pan">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>Oso Pan</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#f7f3ee; --surface:#ffffff; --surface-2:#efe8df; --fg:#2a1f17; --muted:#7a6a5c; --line:#e3d9cc;
+  --crust:#8a4b1f; --crust-fg:#ffffff; --wheat:#d9a441;
+  --in:#2f7d4f; --in-soft:#e2f1e7; --out:#b5432f; --out-soft:#f8e3de; --warn:#a86a00; --warn-soft:#fbeed3;
+  --display:"Bricolage Grotesque",ui-rounded,system-ui,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:18px;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#17110d; --surface:#221a14; --surface-2:#2d231b; --fg:#f3e9de; --muted:#b09d8b; --line:#3a2e24;
+  --crust:#e09a4f; --crust-fg:#1c130c; --wheat:#e8b85a;
+  --in:#6cc58f; --in-soft:#1d3326; --out:#ef8a75; --out-soft:#3a201a; --warn:#f0bf5a; --warn-soft:#3a2d12; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.4;
+  padding:max(12px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) calc(96px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+[hidden]{display:none!important}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.view{display:flex;flex-direction:column;gap:18px}
+.num{font-variant-numeric:tabular-nums}
+header{display:flex;align-items:center;gap:12px}
+.logo{width:44px;height:44px;border-radius:14px;background:#8a4b1f;display:grid;place-items:center;flex:none}
+.logo svg{width:28px;height:28px}
+h1{font-family:var(--display);font-weight:800;font-size:1.5rem;margin:0;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:.85rem}
+.refresh{margin-left:auto;border:1px solid var(--line);background:var(--surface);color:var(--fg);width:40px;height:40px;border-radius:12px;font-size:1.1rem;cursor:pointer;flex:none}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--surface-2);border-radius:14px;padding:4px;gap:4px}
+.seg button{border:0;background:transparent;color:var(--muted);font:600 .95rem var(--body);padding:10px 0;border-radius:10px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:14px}
+.label{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.big{font-family:var(--display);font-weight:800;font-size:2.4rem;line-height:1.05;letter-spacing:-.02em}
+.big.neg{color:var(--out)}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pill{border-radius:12px;padding:10px 12px;min-width:0}
+.pill.in{background:var(--in-soft)} .pill.out{background:var(--out-soft)} .pill.warn{background:var(--warn-soft)} .pill.neu{background:var(--surface-2)}
+.pill .v{font-weight:700;font-size:1.15rem}
+.pill.in .v{color:var(--in)} .pill.out .v{color:var(--out)} .pill.warn .v{color:var(--warn)}
+.pill .k{font-size:.8rem;color:var(--muted)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.act{border:0;border-radius:var(--r);padding:18px 12px;font:700 1.1rem var(--body);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;color:#fff}
+.act span{font-size:1.8rem;line-height:1;font-family:var(--display)}
+.act small{font-weight:500;font-size:.78rem;opacity:.9}
+.act.in{background:#2f7d4f} .act.out{background:#b5432f}
+.wide{border:0;border-radius:14px;padding:15px;font:700 1.05rem var(--body);cursor:pointer;background:var(--crust);color:var(--crust-fg)}
+.ghost{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:12px;padding:10px 14px;font:600 .9rem var(--body);cursor:pointer}
+.ghost.sm{padding:7px 11px;font-size:.85rem}
+.ghost.ok{border-color:var(--in);color:var(--in)}
+.ghost.bad{color:var(--out)}
+h2{font-family:var(--display);font-weight:600;font-size:1.1rem;margin:0}
+.hrow{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.list{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.day{padding:10px 16px 6px;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;background:var(--surface-2)}
+.row{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 16px;border-top:1px solid var(--line)}
+.row.two{grid-template-columns:minmax(0,1fr) auto}
+.row.tap{cursor:pointer;background:none;border-left:0;border-right:0;border-bottom:0;width:100%;text-align:left;color:inherit;font:inherit}
+.day + .row,.list > .row:first-child{border-top:0}
+.dot{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-weight:800;font-family:var(--display)}
+.dot.in{background:var(--in-soft);color:var(--in)} .dot.out{background:var(--out-soft);color:var(--out)} .dot.neu{background:var(--surface-2);color:var(--crust)}
+.t{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m{font-size:.8rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.amt{font-weight:700;text-align:right} .amt.in{color:var(--in)} .amt.out{color:var(--out)}
+.btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.tag{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:999px}
+.tag.low{background:var(--out-soft);color:var(--out)} .tag.ok{background:var(--in-soft);color:var(--in)} .tag.warn{background:var(--warn-soft);color:var(--warn)}
+.empty{padding:24px 18px;text-align:center;color:var(--muted)}
+.note{font-size:.8rem;color:var(--muted);margin:0}
+.loading{padding:40px 0;text-align:center;color:var(--muted)}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qp{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:14px;padding:12px 14px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:2px;font:inherit;min-width:0}
+.qp b{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qp span{color:var(--in);font-weight:700}
+.progress{height:14px;border-radius:7px;background:var(--surface-2);overflow:hidden}
+.progress div{height:100%;background:linear-gradient(90deg,var(--wheat),var(--crust));border-radius:7px}
+.bars{display:flex;flex-direction:column;gap:10px}
+.bar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;font-size:.9rem}
+.bar .track{grid-column:1/-1;height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+.bar .fill{height:100%;background:var(--crust);border-radius:4px}
+.weeks{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;align-items:end;height:110px}
+.weeks div{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;height:100%;font-size:.72rem;color:var(--muted)}
+.weeks i{display:block;width:100%;background:var(--wheat);border-radius:6px 6px 2px 2px;min-height:3px}
+.weeks div.now i{background:var(--crust)}
+.switch{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.search{width:100%;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:12px;padding:12px;font:500 1rem var(--body)}
+.tbl{width:100%;border-collapse:collapse;font-size:.88rem}
+.tbl th{text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:6px 4px;border-bottom:1px solid var(--line)}
+.tbl td{padding:8px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl td.r,.tbl th.r{text-align:right}
+.scroll{overflow-x:auto}
+/* nav */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);
+  padding:6px max(6px,env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))}
+nav.tabs button{border:0;background:none;color:var(--muted);font:600 .7rem var(--body);display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;border-radius:12px;cursor:pointer}
+nav.tabs svg{width:24px;height:24px}
+nav.tabs button[aria-current="page"]{color:var(--crust);background:var(--surface-2)}
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(20,12,6,.45);z-index:20}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--surface);border-radius:22px 22px 0 0;max-height:94vh;overflow:auto;
+  padding:18px max(18px,env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left))}
+.sheet form{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.sheet h3{font-family:var(--display);font-size:1.3rem;margin:0;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.x{border:0;background:var(--surface-2);color:var(--fg);width:36px;height:36px;border-radius:50%;font-size:1.2rem;cursor:pointer;flex:none}
+.fl{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin-bottom:6px;display:block}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:9px 14px;font:600 .9rem var(--body);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--crust);border-color:var(--crust);color:var(--crust-fg)}
+.chip small{font-weight:500;opacity:.75;margin-left:4px}
+.in-text,select.in-text{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:12px;padding:12px;font:500 1rem var(--body)}
+.qty{display:grid;grid-template-columns:48px minmax(0,1fr) 48px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--bg)}
+.qty button{border:0;background:var(--surface-2);color:var(--fg);font:700 1.3rem var(--body);cursor:pointer}
+.qty input{border:0;background:transparent;color:var(--fg);text-align:center;font:700 1.2rem var(--body);width:100%;min-width:0;padding:10px 0}
+.money{display:flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:0 12px}
+.money span{color:var(--muted);font-weight:700}
+.money input{border:0;background:transparent;color:var(--fg);font:700 1.2rem var(--body);width:100%;min-width:0;padding:10px 0;outline:none}
+.totalbox{display:flex;justify-content:space-between;align-items:baseline;background:var(--surface-2);border-radius:14px;padding:14px 16px}
+.totalbox b{font-family:var(--display);font-size:1.9rem}
+.save{border:0;border-radius:14px;padding:16px;font:700 1.1rem var(--body);color:#fff;cursor:pointer;background:#8a4b1f}
+.save.in{background:#2f7d4f} .save.out{background:#b5432f}
+.save:disabled{opacity:.55}
+.ticket{display:flex;gap:12px;align-items:center;border:1.5px dashed var(--line);border-radius:14px;padding:12px;cursor:pointer}
+.ticket img{width:56px;height:56px;object-fit:cover;border-radius:10px;flex:none}
+.ticket .ph{width:56px;height:56px;border-radius:10px;background:var(--surface-2);display:grid;place-items:center;flex:none;font-size:1.5rem}
+.ticket input{display:none}
+.err{color:var(--out);font-size:.9rem}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));background:var(--fg);color:var(--bg);padding:10px 12px 10px 18px;border-radius:999px;font-weight:600;z-index:30;display:flex;gap:12px;align-items:center;max-width:calc(100% - 32px)}
+.toast button{border:0;background:transparent;color:var(--wheat);font:700 .95rem var(--body);cursor:pointer;padding:4px 8px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--wheat);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo" aria-hidden="true">
+      <svg viewBox="0 0 32 32" fill="none"><circle cx="8" cy="9" r="4" fill="#f3e2c4"/><circle cx="24" cy="9" r="4" fill="#f3e2c4"/><path d="M5 20c0-6 5-10 11-10s11 4 11 10c0 4-3 6-11 6S5 24 5 20z" fill="#f3e2c4"/><path d="M11 18c1.5 1.5 3 2 5 2s3.5-.5 5-2" stroke="#8a4b1f" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </div>
+    <div style="min-width:0"><h1 id="vTitle">Oso Pan</h1><div class="sub" id="vSub">Conectado a tu hoja</div></div>
+    <button class="refresh" id="refresh" aria-label="Actualizar">↻</button>
+    <button class="refresh" id="ajustes" aria-label="Ajustes" style="margin-left:0">⚙</button>
+  </header>
+
+  <div id="loading" class="loading">Abriendo tu hoja…</div>
+  <div id="setup" class="card" hidden>
+    <h2>Conecta Oso Pan con tu hoja</h2>
+    <p class="note">Pega la URL de tu Apps Script de Oso Pan (la que termina en <b>/exec</b>) y la clave que viene arriba en tu Codigo.gs. Solo se guardan en este celular.</p>
+    <div><label class="fl" for="cfgUrl">URL /exec</label><input class="in-text" id="cfgUrl" type="url" inputmode="url" autocomplete="off" placeholder="https://script.google.com/macros/s/…/exec"></div>
+    <div><label class="fl" for="cfgClave">Clave</label><input class="in-text" id="cfgClave" autocomplete="off" placeholder="La de const CLAVE"></div>
+    <div class="err" id="cfgErr" hidden></div>
+    <button class="save" id="cfgSave">Conectar</button>
+  </div>
+
+  <!-- INICIO -->
+  <section class="view" id="v-inicio" hidden>
+    <div class="seg" role="group" aria-label="Periodo">
+      <button data-p="hoy" aria-pressed="true">Hoy</button>
+      <button data-p="mes" aria-pressed="false">Este mes</button>
+    </div>
+    <div class="card" aria-live="polite">
+      <div><div class="label" id="sumLabel">Ganancia de hoy</div><div class="big num" id="net">$0.00</div></div>
+      <div class="split">
+        <div class="pill in"><div class="k">Ingresos</div><div class="v num" id="tin">$0.00</div></div>
+        <div class="pill out"><div class="k">Egresos del negocio</div><div class="v num" id="tout">$0.00</div></div>
+      </div>
+      <div class="split" id="extra" hidden>
+        <div class="pill neu"><div class="k">Gastos personales</div><div class="v num" id="tpers">$0.00</div></div>
+        <div class="pill warn"><div class="k">Meta del mes</div><div class="v num" id="tmeta">–</div></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="act in" id="addIn"><span>+</span>Ingreso<small>va a Ventas</small></button>
+      <button class="act out" id="addOut"><span>−</span>Egreso<small>con foto del ticket</small></button>
+    </div>
+    <div><div class="hrow" style="margin-bottom:10px"><h2>Venta rápida</h2><button class="ghost sm" data-go="catalogo">Mis productos</button></div><div class="quick" id="quick"></div></div>
+    <h2>Últimos movimientos</h2>
+    <div class="list" id="list"></div>
+    <p class="note">Para corregir algo viejo, hazlo directo en la hoja. Justo después de guardar puedes tocar <b>Deshacer</b>.</p>
+  </section>
+
+  <!-- PEDIDOS -->
+  <section class="view" id="v-pedidos" hidden>
+    <button class="wide" id="addPed">+ Nuevo pedido</button>
+    <div class="hrow"><h2>Por entregar</h2><span class="note" id="pedCount"></span></div>
+    <div class="list" id="pedList"></div>
+    <h2>Entregados y cancelados</h2>
+    <div class="list" id="pedHist"></div>
+    <p class="note">Cada pedido se agenda en tu Google Calendar con aviso un día antes. Al tocar <b>Entregado</b> se registra solo como venta.</p>
+  </section>
+
+  <!-- PRODUCCIÓN -->
+  <section class="view" id="v-produccion" hidden>
+    <button class="wide" id="addProd">+ Registrar lo que horneé</button>
+    <button class="ghost" data-go="catalogo">📋 Mis productos y recetas</button>
+    <h2>Producción reciente</h2>
+    <div class="list" id="prodList"></div>
+    <p class="note">Al final del día anota cuántas piezas <b>no se vendieron</b>. Así sabes cuánto se te va en merma.</p>
+    <div class="card">
+      <div><h2>Planear y lista del súper</h2><p class="note" style="margin-top:4px">Pon cuántos batches piensas hacer y te digo qué comprar según tu inventario.</p></div>
+      <div id="planBox" style="display:flex;flex-direction:column;gap:10px"></div>
+      <button class="ghost" id="calcSuper">Calcular lista del súper</button>
+      <div id="superOut"></div>
+    </div>
+  </section>
+
+  <!-- INVENTARIO -->
+  <section class="view" id="v-inventario" hidden>
+    <div class="split">
+      <div class="pill out"><div class="k">Por acabarse</div><div class="v num" id="invLow">0</div></div>
+      <div class="pill neu"><div class="k">Insumos</div><div class="v num" id="invAll">0</div></div>
+    </div>
+    <input class="search" id="invQ" placeholder="Buscar insumo…" aria-label="Buscar insumo">
+    <div class="seg" role="group" aria-label="Filtro">
+      <button data-f="todos" aria-pressed="true">Todos</button>
+      <button data-f="bajos" aria-pressed="false">Por acabarse</button>
+    </div>
+    <div class="list" id="invList"></div>
+    <p class="note">Las compras de materia prima suman solas y cada producción resta según tus recetas. Toca un insumo para corregir con tu conteo real o ponerle un mínimo.</p>
+  </section>
+
+  <!-- CATÁLOGO -->
+  <section class="view" id="v-catalogo" hidden>
+    <div class="actions">
+      <button class="act" style="background:var(--crust);color:var(--crust-fg)" id="addProducto"><span>+</span>Producto</button>
+      <button class="act" style="background:var(--surface-2);color:var(--fg)" id="addInsumo"><span>+</span>Insumo</button>
+    </div>
+    <div class="list" id="catList"></div>
+    <p class="note">Todo se guarda en tus pestañas Productos, Recetas e Insumos. El costo por pieza lo calcula tu hoja con los precios de tus últimas compras.</p>
+  </section>
+
+  <!-- META -->
+  <section class="view" id="v-meta" hidden>
+    <div class="card">
+      <div class="hrow"><div class="label" id="metaMes">Meta del mes</div><button class="ghost sm" id="editMeta">Cambiar meta</button></div>
+      <div><div class="big num" id="metaVentas">$0</div><div class="note" id="metaDe">de $0</div></div>
+      <div class="progress"><div id="metaBar" style="width:0%"></div></div>
+      <div class="split">
+        <div class="pill neu"><div class="k">Te falta</div><div class="v num" id="metaFalta">$0</div></div>
+        <div class="pill warn"><div class="k">Por día</div><div class="v num" id="metaDia">$0</div></div>
+      </div>
+      <p class="note" id="metaComp"></p>
+    </div>
+    <div class="card">
+      <h2>Ventas por semana</h2>
+      <div class="weeks" id="weeks"></div>
+    </div>
+    <div class="card">
+      <div class="hrow"><h2>Producto estrella</h2><span class="note">este mes</span></div>
+      <div class="bars" id="stars"></div>
+    </div>
+    <div class="card">
+      <h2>Correo de los lunes</h2>
+      <p class="note">Cada lunes a las 8 am te llega a tu Gmail el resumen de la semana: ventas, gastos, ganancia, merma, tickets, pedidos e insumos por acabarse.</p>
+      <div class="switch"><span id="mailState">Desactivado</span><button class="ghost" id="mailToggle">Activar</button></div>
+      <button class="ghost" id="mailNow">Enviarme uno ahora</button>
+    </div>
+  </section>
+</div>
+
+<nav class="tabs" aria-label="Secciones">
+  <button data-v="inicio" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Inicio</button>
+  <button data-v="pedidos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Pedidos</button>
+  <button data-v="produccion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15c0-5 3.6-9 8-9s8 4 8 9c0 3-3 4-8 4s-8-1-8-4z"/><path d="M9 9.5c.5 2 .5 4 0 6M15 9.5c-.5 2-.5 4 0 6"/></svg>Producción</button>
+  <button data-v="inventario"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>Inventario</button>
+  <button data-v="meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>Meta</button>
+</nav>
+
+<div class="scrim" id="scrim" hidden></div>
+
+<!-- Ingreso -->
+<div class="sheet" id="sheetIn" hidden role="dialog" aria-modal="true" aria-labelledby="tIn">
+  <form id="formIn" autocomplete="off">
+    <h3><span id="tIn">Nuevo ingreso</span><button type="button" class="x" data-close aria-label="Cerrar">×</button></h3>
+    <div><span class="fl">Tipo</span><div class="chips" id="inTipo"></div></div>
+    <div id="inProdBox"><span class="fl">Producto</span><div class="chips" id="inProd"></div></div>
+    <div id="inConceptoBox" hidden><label class="fl" for="inConcepto">Concepto</label><input class="in-text" id="inConcepto" placeholder="Ej. préstamo, apoyo, otro"></div>
+    <div><span class="fl">Cliente</span><div class="chips" id="inCli"></div></div>
+    <div class="split">
+      <div><span class="fl">Cantidad</span><div class="qty"><button type="button" id="inMinus" aria-label="Menos">−</button><input id="inCant" inputmode="numeric" value="1" aria-label="Cantidad"><button type="button" id="inPlus" aria-label="Más">+</button></div></div>
+      <div><label class="fl" for="inPrecio">Precio c/u</label><div class="money"><span>$</span><input id="inPrecio" inputmode="decimal" placeholder="0"></div></div>
+    </div>
+    <div id="inPrecioTipo" class="chips"></div>
+    <div><span class="fl">Forma de pago</span><div class="chips" id="inMet"></div></div>
+    <div class="split">
+      <div><label class="fl" for="inFecha">Fecha</label><input class="in-text" type="date" id="inFecha"></div>
+      <div><label class="fl" for="inNotas">Nota</label><input class="in-text" id="inNotas" placeholder="Opcional"></div>
+    </div>
+    <div class="totalbox"><span class="label">Total</span><b class="num" id="inTotal">$0.00</b></div>
+    <div class="err" id="inErr" hidden></div>
+    <button class="save in" id="inSave" type="submit">Guardar ingreso</button>
+  </form>
+</div>
+
+<!-- Egreso -->
+<div class="sheet" id="sheetOut" hidden role="dialog" aria-modal="true" aria-labelledby="tOut">
+  <form id="formOut" autocomplete="off">
+    <h3><span id="tOut">Nuevo egreso</span><button type="button" class="x" data-close aria-label="Cerrar">×</button></h3>
+    <label class="ticket" for="outFoto">
+      <span class="ph" id="outPh">📷</span><img id="outImg" alt="Ticket" hidden>
+      <span style="min-width:0"><b id="outTicketT">Tomar foto del ticket</b><br><span class="note" id="outTicketS">Se guarda en tu Drive y leo el total por ti</span></span>
+      <input type="file" id="outFoto" accept="image/*" capture="environment">
+    </label>
+    <div><span class="fl">Categoría</span><div class="chips" id="outCat"></div></div>
+    <div id="outInsBox"><label class="fl" for="outIns">Insumo</label><select class="in-text" id="outIns"></select></div>
+    <div><span class="fl">¿De quién es el gasto?</span><div class="chips" id="outAmb"></div></div>
+    <div><span class="fl">Dónde compraste</span><div class="chips" id="outProv"></div></div>
+    <div class="split">
+      <div><span class="fl">Cantidad</span><div class="qty"><button type="button" id="outMinus" aria-label="Menos">−</button><input id="outCant" inputmode="decimal" value="1" aria-label="Cantidad"><button type="button" id="outPlus" aria-label="Más">+</button></div></div>
+      <div><label class="fl" for="outPrecio">Precio c/u</label><div class="money"><span>$</span><input id="outPrecio" inputmode="decimal" placeholder="0"></div></div>
+    </div>
+    <div><span class="fl">Forma de pago</span><div class="chips" id="outMet"></div></div>
+    <div class="split">
+      <div><label class="fl" for="outFecha">Fecha</label><input class="in-text" type="date" id="outFecha"></div>
+      <div><label class="fl" for="outTicket">Folio</label><input class="in-text" id="outTicket" placeholder="Opcional"></div>
+    </div>
+    <div><label class="fl" for="outNotas">Nota</label><input class="in-text" id="outNotas" placeholder="Opcional"></div>
+    <div class="totalbox"><span class="label">Total</span><b class="num" id="outTotal">$0.00</b></div>
+    <div class="err" id="outErr" hidden></div>
+    <button class="save out" id="outSave" type="submit">Guardar egreso</button>
+  </form>
+</div>
+
+<!-- Pedido -->
+<div class="sheet" id="sheetPed" hidden role="dialog" aria-modal="true" aria-labelledby="tPed">
+  <form id="formPed" autocomplete="off">
+    <h3><span id="tPed">Nuevo pedido</span><button type="button" class="x" data-close aria-label="Cerrar">×</button></h3>
+    <div><label class="fl" for="pedCli">Cliente</label><input class="in-text" id="pedCli" placeholder="Nombre" list="cliList"><datalist id="cliList"></datalist></div>
+    <div><span class="fl">Producto</span><div class="chips" id="pedProd"></div></div>
+    <div class="split">
+      <div><span class="fl">Cantidad</span><div class="qty"><button type="button" id="pedMinus" aria-label="Menos">−</button><input id="pedCant" inputmode="numeric" value="1" aria-label="Cantidad"><button type="button" id="pedPlus" aria-label="Más">+</button></div></div>
+      <div><label class="fl" for="pedPrecio">Precio c/u</label><div class="money"><span>$</span><input id="pedPrecio" inputmode="decimal" placeholder="0"></div></div>
+    </div>
+    <div class="split">
+      <div><label class="fl" for="pedFecha">Entrega</label><input class="in-text" type="date" id="pedFecha"></div>
+      <div><label class="fl" for="pedHora">Hora</label><input class="in-text" type="time" id="pedHora"></div>
+    </div>
+    <div><label class="fl" for="pedNotas">Nota</label><input class="in-text" id="pedNotas" placeholder="Ej. sin chocolate, para fiesta"></div>
+    <div class="totalbox"><span class="label">Total</span><b class="num" id="pedTotal">$0.00</b></div>
+    <div class="err" id="pedErr" hidden></div>
+    <button class="save" id="pedSave" type="submit">Guardar y agendar</button>
+  </form>
+</div>
+
+<!-- Producción -->
+<div class="sheet" id="sheetProd" hidden role="dialog" aria-modal="true" aria-labelledby="tProd">
+  <form id="formProd" autocomplete="off">
+    <h3><span id="tProd">Lo que horneé</span><button type="button" class="x" data-close aria-label="Cerrar">×</button></h3>
+    <div><span class="fl">Producto</span><div class="chips" id="prodProd"></div></div>
+    <div class="split">
+      <div><span class="fl">Batches</span><div class="qty"><button type="button" id="prodMinus" aria-label="Menos">−</button><input id="prodB" inputmode="decimal" value="1" aria-label="Batches"><button type="button" id="prodPlus" aria-label="Más">+</button></div></div>
+      <div><label class="fl" for="prodFecha">Fecha</label><input class="in-text" type="date" id="prodFecha"></div>
+    </div>
+    <div class="split">
+      <div class="pill neu"><div class="k">Piezas</div><div class="v num" id="prodPz">0</div></div>
+      <div class="pill out"><div class="k">Te cuesta</div><div class="v num" id="prodCost">$0</div></div>
+    </div>
+    <p class="note" id="prodNote"></p>
+    <div class="err" id="prodErr" hidden></div>
+    <button class="save" id="prodSave" type="submit">Guardar y descontar insumos</button>
+  </form>
+</div>
+
+<!-- Inventario -->
+<div class="sheet" id="sheetInv" hidden role="dialog" aria-modal="true" aria-labelledby="tInv">
+  <form id="formInv" autocomplete="off">
+    <h3><span id="tInv">Insumo</span><button type="button" class="x" data-close aria-label="Cerrar">×</button></h3>
+    <p class="note" id="invInfo"></p>
+    <div class="split">
+      <div><label class="fl" for="invEx">Tengo (conteo real)</label><input class="in-text" id="invEx" inputmode="decimal"></div>
+      <div><label class="fl" for="invMin">Avisarme bajo de</label><input class="in-text" id="invMin" inputmode="decimal" placeholder="Sin mínimo"></div>
+    </div>
+    <div class="err" id="invErr" hidden></div>
+    <button class="save" id="invSave" type="submit">Guardar</button>
+  </form>
+</div>
+
+<!-- Producto -->
+<div class="sheet" id="sheetCat" hidden role="dialog" aria-modal="true" aria-labelledby="tCat">
+  <form id="formCat" autocomplete="off">
+    <h3><span id="tCat">Nuevo producto</span><button type="button" class="x" data-close aria-label="Cerrar">×</button></h3>
+    <div><label class="fl" for="catNombre">Nombre</label><input class="in-text" id="catNombre" placeholder="Ej. Croissant pizza"></div>
+    <div class="split">
+      <div><label class="fl" for="catMenudeo">Precio menudeo</label><div class="money"><span>$</span><input id="catMenudeo" inputmode="decimal" placeholder="0"></div></div>
+      <div><label class="fl" for="catMayoreo">Precio mayoreo</label><div class="money"><span>$</span><input id="catMayoreo" inputmode="decimal" placeholder="Opcional"></div></div>
+    </div>
+    <div class="split">
+      <div><label class="fl" for="catPiezas">Piezas por batch</label><input class="in-text" id="catPiezas" inputmode="numeric" value="1"></div>
+      <div><label class="fl" for="catInd">Gas, luz y merma</label><div class="money"><span>$</span><input id="catInd" inputmode="decimal" placeholder="10"></div></div>
+    </div>
+    <div>
+      <div class="hrow" style="margin-bottom:8px"><span class="fl" style="margin:0">Receta (por batch)</span><button type="button" class="ghost sm" id="catAddIng">+ Ingrediente</button></div>
+      <div id="catIngs" style="display:flex;flex-direction:column;gap:8px"></div>
+      <datalist id="insList"></datalist>
+      <button type="button" class="ghost sm" id="catNewIns" style="margin-top:8px">¿No está? Crear insumo nuevo</button>
+    </div>
+    <div class="split">
+      <div class="pill out"><div class="k">Costo por pieza</div><div class="v num" id="catCosto">$0</div></div>
+      <div class="pill in"><div class="k">Ganas por pieza</div><div class="v num" id="catGana">$0</div></div>
+    </div>
+    <p class="note" id="catNote">Costo aproximado con tus precios actuales. Tu hoja hace el cálculo exacto al guardar.</p>
+    <div><label class="fl" for="catNotas">Nota</label><input class="in-text" id="catNotas" placeholder="Opcional"></div>
+    <div class="err" id="catErr" hidden></div>
+    <button class="save" id="catSave" type="submit">Guardar producto</button>
+    <button class="ghost bad" id="catDel" type="button" hidden>Borrar producto y su receta</button>
+  </form>
+</div>
+
+<!-- Insumo -->
+<div class="sheet" id="sheetIns" hidden role="dialog" aria-modal="true" aria-labelledby="tIns">
+  <form id="formIns" autocomplete="off">
+    <h3><span id="tIns">Nuevo insumo</span><button type="button" class="x" data-close aria-label="Cerrar">×</button></h3>
+    <div><label class="fl" for="insNombre">Nombre</label><input class="in-text" id="insNombre" placeholder="Ej. Salsa para pizza"></div>
+    <div><span class="fl">Categoría</span><div class="chips" id="insCat"></div></div>
+    <div><span class="fl">Se mide en</span><div class="chips" id="insUni"></div></div>
+    <div><label class="fl" for="insPres">Cómo lo compras</label><input class="in-text" id="insPres" placeholder="Ej. Frasco 1 kg"></div>
+    <div class="split">
+      <div><label class="fl" for="insCont">Trae (en <span id="insUniTxt">g</span>)</label><input class="in-text" id="insCont" inputmode="decimal" placeholder="1000"></div>
+      <div><label class="fl" for="insPrecio">Precio</label><div class="money"><span>$</span><input id="insPrecio" inputmode="decimal" placeholder="0"></div></div>
+    </div>
+    <p class="note" id="insCU"></p>
+    <div class="err" id="insErr" hidden></div>
+    <button class="save" id="insSave" type="submit">Guardar insumo</button>
+  </form>
+</div>
+
+<!-- Meta -->
+<div class="sheet" id="sheetMeta" hidden role="dialog" aria-modal="true" aria-labelledby="tMeta">
+  <form id="formMeta" autocomplete="off">
+    <h3><span id="tMeta">Meta de ventas del mes</span><button type="button" class="x" data-close aria-label="Cerrar">×</button></h3>
+    <div class="money"><span>$</span><input id="metaIn" inputmode="decimal" placeholder="20000" aria-label="Meta"></div>
+    <p class="note">Se usa también para los meses siguientes hasta que la cambies.</p>
+    <button class="save" type="submit">Guardar meta</button>
+  </form>
+</div>
+
+<div class="toast" id="toast" hidden><span id="toastMsg"></span><button id="undo" hidden>Deshacer</button></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const fmt=n=>(n<0?"-":"")+"$"+Math.abs(n||0).toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmt0=n=>"$"+Math.round(n||0).toLocaleString("es-MX");
+const pad=n=>String(n).padStart(2,"0");
+const hoyISO=()=>{const d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())};
+const num=v=>{const n=parseFloat(String(v).replace(/[$,\s]/g,""));return isNaN(n)?0:n};
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const DIAS=["dom","lun","mar","mié","jue","vie","sáb"],MESES=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+const diaTxt=iso=>{const[a,b,c]=iso.split("-").map(Number);const d=new Date(a,b-1,c);return (iso===hoyISO()?"Hoy · ":"")+DIAS[d.getDay()]+" "+c+" "+MESES[b-1]};
+const cantTxt=(n,u)=>u==="g"&&Math.abs(n)>=1000?(n/1000).toLocaleString("es-MX",{maximumFractionDigits:2})+" kg":u==="ml"&&Math.abs(n)>=1000?(n/1000).toLocaleString("es-MX",{maximumFractionDigits:2})+" L":(Math.round(n*100)/100).toLocaleString("es-MX")+" "+(u||"");
+
+let K=null,C=null,R=null,P=null,PR=null,INV=null,M=null,periodo="hoy",vista="inicio",ultimo=null,invF="todos";
+const S={in:{},out:{},ped:{},prod:{},inv:{}};
+try{periodo=localStorage.getItem("osopan.periodo")||"hoy"}catch(e){}
+
+const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let CFG={url:LS.get("osopan.url")||"",clave:LS.get("osopan.clave")||""};
+async function run(fn,...args){
+  if(!CFG.url)throw new Error("Falta conectar la app (botón ⚙).");
+  let r;
+  try{r=await fetch(CFG.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({accion:fn,args:args,clave:CFG.clave}),redirect:"follow"})}
+  catch(e){throw new Error("Sin conexión. Revisa tu internet.")}
+  let j;try{j=await r.json()}catch(e){throw new Error('Tu hoja no contestó. Revisa la URL /exec y que el acceso sea "Cualquier persona".')}
+  if(!j.ok)throw new Error(j.error||"Error");
+  return j.datos;
+}
+function chips(el,items,cur,onPick,labelFn){
+  el.replaceChildren();
+  items.forEach(it=>{const val=typeof it==="string"?it:it.nombre;
+    const c=document.createElement("button");c.type="button";c.className="chip";
+    if(labelFn)c.innerHTML=labelFn(it);else c.textContent=val;
+    c.setAttribute("aria-pressed",val===cur);
+    c.onclick=()=>{el.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x===c));onPick(it)};
+    el.append(c)});
+}
+function stepper(minus,plus,input,min,cb){$(minus).onclick=()=>{$(input).value=Math.max(min,num($(input).value)-1);cb()};$(plus).onclick=()=>{$(input).value=num($(input).value)+1;cb()};$(input).oninput=cb}
+function err(k,t){$(k+"Err").textContent=t;$(k+"Err").hidden=false}
+function show(id){$("scrim").hidden=false;$(id).hidden=false}
+function hide(){$("scrim").hidden=true;document.querySelectorAll(".sheet").forEach(s=>s.hidden=true)}
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=hide);$("scrim").onclick=hide;
+document.addEventListener("keydown",e=>{if(e.key==="Escape")hide()});
+function toast(t,undo){$("toastMsg").textContent=t;$("undo").hidden=!undo;$("toast").hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>$("toast").hidden=true,undo?7000:2600)}
+function confirmar(btn,txt,fn){if(btn.dataset.arm){delete btn.dataset.arm;fn();return}const o=btn.textContent;btn.dataset.arm=1;btn.textContent=txt;setTimeout(()=>{delete btn.dataset.arm;btn.textContent=o},3000)}
+async function busy(btn,label,fn){const t=btn.textContent;btn.disabled=true;btn.textContent=label;try{return await fn()}finally{btn.disabled=false;btn.textContent=t}}
+
+/* ---------- productos base ---------- */
+const BASE=[{nombre:"Chocolatín",menudeo:35,mayoreo:30},{nombre:"Croissant jamón y queso",menudeo:45},{nombre:"Croissant pizza",menudeo:50},{nombre:"Donas",menudeo:10}];
+function mezclar(){const by={};C.productos.forEach(p=>by[p.nombre.toLowerCase()]=p);
+  const top=BASE.map(b=>{const p=by[b.nombre.toLowerCase()];if(p){delete by[b.nombre.toLowerCase()];return Object.assign({},b,p,{menudeo:p.menudeo||b.menudeo})}return b});
+  C.productos=top.concat(Object.values(by))}
+function rapidos(){const el=$("quick");el.replaceChildren();C.productos.slice(0,4).forEach(p=>{const b=document.createElement("button");b.type="button";b.className="qp";
+  b.innerHTML=`<b>${esc(p.nombre)}</b><span class="num">${fmt(p.menudeo)}</span>`;b.onclick=()=>openIn(p);el.append(b)})}
+
+/* ---------- navegación ---------- */
+const TITULOS={inicio:["Oso Pan","Conectado a tu hoja"],pedidos:["Pedidos","Encargos con recordatorio en tu calendario"],produccion:["Producción","Lo que horneas, lo que sobra y qué comprar"],inventario:["Inventario","Tus insumos en existencia"],meta:["Meta","Cómo vas este mes"],catalogo:["Mis productos","Precios, recetas e insumos"]};
+function ir(v){vista=v;
+  const nv=v==="catalogo"?"produccion":v;
+  document.querySelectorAll("nav.tabs button").forEach(b=>{if(b.dataset.v===nv)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+  document.querySelectorAll(".view").forEach(s=>s.hidden=s.id!=="v-"+v);
+  $("vTitle").textContent=TITULOS[v][0];$("vSub").textContent=TITULOS[v][1];window.scrollTo(0,0);
+  cargarVista(v,false)}
+document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>ir(b.dataset.v));
+async function cargarVista(v,force){
+  try{
+    if(v==="pedidos"){if(force||!P)P=await run("getPedidos");renderPedidos()}
+    if(v==="produccion"){if(force||!PR)PR=await run("getProduccion");renderProd()}
+    if(v==="inventario"){if(force||!INV)INV=await run("getInventario");renderInv()}
+    if(v==="meta"){if(force||!M)M=await run("getMeta");renderMeta()}
+    if(v==="catalogo"){if(force||!K)K=await run("getCatalogoProductos");renderCat()}
+    if(v==="inicio"&&force){R=await run("getResumen");renderResumen()}
+  }catch(e){toast("No pude leer la hoja. Revisa tu internet.")}
+}
+$("refresh").onclick=async()=>{$("refresh").disabled=true;await cargarVista(vista,true);$("refresh").disabled=false;toast("Actualizado")};
+
+/* ---------- INICIO ---------- */
+function renderResumen(){
+  if(!R)return;
+  document.querySelectorAll("#v-inicio .seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.p===periodo));
+  const p=periodo==="hoy"?R.hoy:R.mes;
+  $("sumLabel").textContent=periodo==="hoy"?"Ganancia de hoy":"Ganancia de "+(R.mesNombre||"este mes");
+  const net=p.ventas-p.gastos;$("net").textContent=fmt(net);$("net").classList.toggle("neg",net<0);
+  $("tin").textContent=fmt(p.ventas);$("tout").textContent=fmt(p.gastos);
+  $("extra").hidden=periodo!=="mes";$("tpers").textContent=fmt(R.mes.personal);
+  $("tmeta").textContent=M&&M.meta?Math.round(R.mes.ventas/M.meta*100)+"%":"Sin meta";
+  const list=$("list");list.replaceChildren();
+  if(!R.recientes.length){list.innerHTML='<div class="empty">Todavía no hay movimientos en la hoja.</div>';return}
+  let last=null;
+  R.recientes.forEach(r=>{
+    if(r.fecha!==last){last=r.fecha;const h=document.createElement("div");h.className="day";h.textContent=diaTxt(r.fecha);list.append(h)}
+    const k=r.kind==="venta"?"in":"out";const el=document.createElement("div");el.className="row";
+    el.innerHTML=`<div class="dot ${k}">${k==="in"?"+":"−"}</div><div style="min-width:0"><div class="t">${esc(r.titulo)}</div><div class="m">${esc(r.detalle||r.hoja)}</div></div><div class="amt num ${k}">${k==="in"?"+":"−"}${fmt(r.total)}</div>`;
+    list.append(el)});
+}
+document.querySelectorAll("#v-inicio .seg button").forEach(b=>b.onclick=()=>{periodo=b.dataset.p;try{localStorage.setItem("osopan.periodo",periodo)}catch(e){}renderResumen()});
+
+/* ---------- Ingreso ---------- */
+function precioDe(prod,tipo){if(!prod)return 0;return tipo==="Mayoreo"&&prod.mayoreo?prod.mayoreo:(prod.menudeo||prod.mayoreo||0)}
+function totIn(){$("inTotal").textContent=fmt(num($("inCant").value)*num($("inPrecio").value))}
+function setPrecio(){const p=precioDe(S.in.prod,S.in.ptipo);$("inPrecio").value=p?p:"";totIn()}
+function openIn(pre){
+  const s=S.in;s.tipo="Venta";s.prod=(pre&&pre.nombre?pre:C.productos[0])||null;s.cli="";s.met=C.metodos[0]||"Efectivo";s.ptipo="Menudeo";
+  chips($("inTipo"),C.tiposIngreso.length?C.tiposIngreso:["Venta","Otro ingreso"],s.tipo,v=>{s.tipo=v;$("inProdBox").hidden=v!=="Venta";$("inConceptoBox").hidden=v==="Venta";$("inPrecioTipo").hidden=v!=="Venta";if(v!=="Venta"){$("inPrecio").value="";$("inCant").value=1}else setPrecio();totIn()});
+  chips($("inProd"),C.productos,s.prod&&s.prod.nombre,p=>{s.prod=p;setPrecio()},p=>esc(p.nombre)+(p.menudeo?`<small>$${p.menudeo}</small>`:""));
+  chips($("inCli"),C.clientes,s.cli,v=>s.cli=v);
+  chips($("inPrecioTipo"),["Menudeo","Mayoreo"],s.ptipo,v=>{s.ptipo=v;setPrecio()});
+  chips($("inMet"),C.metodos,s.met,v=>s.met=v);
+  $("inProdBox").hidden=false;$("inConceptoBox").hidden=true;$("inPrecioTipo").hidden=false;
+  $("inCant").value=1;$("inConcepto").value="";$("inNotas").value="";$("inFecha").value=hoyISO();$("inErr").hidden=true;
+  setPrecio();show("sheetIn");
+}
+stepper("inMinus","inPlus","inCant",1,totIn);$("inPrecio").oninput=totIn;
+$("formIn").addEventListener("submit",async e=>{
+  e.preventDefault();const s=S.in;
+  const v={tipo:s.tipo,producto:s.tipo==="Venta"?(s.prod&&s.prod.nombre||""):$("inConcepto").value.trim(),cliente:s.cli,cantidad:num($("inCant").value)||1,precio:num($("inPrecio").value),
+    pagado:"Pagado",metodo:s.met,ambito:"Negocio",fecha:$("inFecha").value,notas:$("inNotas").value.trim()};
+  if(!(v.precio>0))return err("in","Escribe el precio.");
+  if(!v.producto)return err("in",s.tipo==="Venta"?"Elige el producto.":"Escribe el concepto.");
+  await guardarMov("in","guardarVenta",v,"Ingreso guardado en Ventas");
+});
+
+/* ---------- Egreso + ticket ---------- */
+function totOut(){$("outTotal").textContent=fmt(num($("outCant").value)*num($("outPrecio").value))}
+function openOut(){
+  const s=S.out;s.cat=C.categoriasGasto[0]||"Materia prima";s.amb=C.ambitos[0]||"Negocio";s.prov="";s.met=C.metodos[0]||"Efectivo";s.ticketUrl="";s.subiendo=false;
+  chips($("outCat"),C.categoriasGasto,s.cat,v=>{s.cat=v;$("outInsBox").hidden=v!=="Materia prima"});
+  chips($("outAmb"),C.ambitos.length?C.ambitos:["Negocio","Personal"],s.amb,v=>s.amb=v);
+  chips($("outProv"),C.proveedores,s.prov,v=>s.prov=v);
+  chips($("outMet"),C.metodos,s.met,v=>s.met=v);
+  const sel=$("outIns");sel.replaceChildren();sel.append(new Option("Elige el insumo…",""));C.insumos.forEach(i=>sel.append(new Option(i,i)));
+  $("outInsBox").hidden=s.cat!=="Materia prima";
+  $("outCant").value=1;$("outPrecio").value="";$("outTicket").value="";$("outNotas").value="";$("outFecha").value=hoyISO();$("outErr").hidden=true;
+  $("outImg").hidden=true;$("outPh").hidden=false;$("outTicketT").textContent="Tomar foto del ticket";$("outTicketS").textContent="Se guarda en tu Drive y leo el total por ti";$("outFoto").value="";
+  totOut();show("sheetOut");
+}
+stepper("outMinus","outPlus","outCant",1,totOut);$("outPrecio").oninput=totOut;
+function comprimir(file){return new Promise((ok,ko)=>{const img=new Image();const url=URL.createObjectURL(file);img.onload=()=>{const k=Math.min(1,1600/Math.max(img.width,img.height));
+  const c=document.createElement("canvas");c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext("2d").drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);ok(c.toDataURL("image/jpeg",.82))};img.onerror=ko;img.src=url})}
+$("outFoto").onchange=async()=>{
+  const f=$("outFoto").files[0];if(!f)return;const s=S.out;
+  try{
+    const data=await comprimir(f);$("outImg").src=data;$("outImg").hidden=false;$("outPh").hidden=true;
+    $("outTicketT").textContent="Subiendo y leyendo…";$("outTicketS").textContent="Puedes ir llenando lo demás";s.subiendo=true;
+    const r=await run("subirTicket",{data:data.split(",")[1],mime:"image/jpeg",fecha:$("outFecha").value});
+    s.ticketUrl=r.url;s.subiendo=false;
+    if(r.leido){
+      const bits=[];
+      if(r.total>0&&!num($("outPrecio").value)){$("outCant").value=1;$("outPrecio").value=r.total;totOut();bits.push("total "+fmt(r.total))}
+      if(r.fecha){$("outFecha").value=r.fecha;bits.push("fecha")}
+      if(r.proveedor){if(C.proveedores.indexOf(r.proveedor)<0)C.proveedores.push(r.proveedor);s.prov=r.proveedor;chips($("outProv"),C.proveedores,s.prov,v=>s.prov=v);bits.push(r.proveedor)}
+      $("outTicketT").textContent="Ticket guardado ✓";$("outTicketS").textContent=bits.length?"Leí: "+bits.join(", ")+". Revísalo.":"No pude leer el total, escríbelo tú.";
+    }else{$("outTicketT").textContent="Ticket guardado ✓";$("outTicketS").textContent="Escribe el total tú (la lectura automática no está activada).";}
+  }catch(e){s.subiendo=false;$("outTicketT").textContent="No se pudo subir la foto";$("outTicketS").textContent="Toca para intentar otra vez"}
+};
+$("formOut").addEventListener("submit",async e=>{
+  e.preventDefault();const s=S.out;
+  if(s.subiendo)return err("out","Espera a que termine de subir el ticket.");
+  const g={categoria:s.cat,insumo:s.cat==="Materia prima"?$("outIns").value:"",ambito:s.amb,proveedor:s.prov,cantidad:num($("outCant").value)||1,precio:num($("outPrecio").value),
+    metodo:s.met,fecha:$("outFecha").value,ticket:$("outTicket").value.trim(),ticketUrl:s.ticketUrl,notas:$("outNotas").value.trim()};
+  if(!(g.precio>0))return err("out","Escribe el precio.");
+  if(s.cat==="Materia prima"&&!g.insumo)return err("out","Elige el insumo para que se sume a tu inventario.");
+  await guardarMov("out","guardarGasto",g,"Egreso guardado en Compras");
+});
+async function guardarMov(k,fn,data,msg){
+  const b=$(k+"Save");$(k+"Err").hidden=true;
+  try{await busy(b,"Guardando…",async()=>{const r=await run(fn,data);R=r.resumen;ultimo={hoja:r.hoja,fila:r.fila,inv:r.inv||null};if(r.inv)INV=null;renderResumen();hide();toast(msg,true)})}
+  catch(e){err(k,"No se pudo guardar: "+(e&&e.message||e))}
+}
+$("undo").onclick=async()=>{if(!ultimo)return;$("undo").hidden=true;$("toastMsg").textContent="Deshaciendo…";
+  try{const r=await run("deshacer",ultimo.hoja,ultimo.fila,ultimo.inv);R=r.resumen;if(ultimo.inv)INV=null;ultimo=null;renderResumen();toast("Listo, se borró de la hoja")}catch(e){toast("No se pudo deshacer")}};
+$("addIn").onclick=()=>openIn();$("addOut").onclick=openOut;
+
+/* ---------- PEDIDOS ---------- */
+function renderPedidos(){
+  const pend=P.filter(p=>p.estado==="Pendiente"),hist=P.filter(p=>p.estado!=="Pendiente").reverse().slice(0,8);
+  $("pedCount").textContent=pend.length?pend.length+" pendientes · "+fmt(pend.reduce((a,p)=>a+p.total,0)):"";
+  const L=$("pedList");L.replaceChildren();
+  if(!pend.length)L.innerHTML='<div class="empty">No tienes pedidos pendientes. Toca <b>+ Nuevo pedido</b> cuando te encarguen algo.</div>';
+  let last=null;
+  pend.forEach(p=>{
+    if(p.entrega!==last){last=p.entrega;const h=document.createElement("div");h.className="day";h.textContent=diaTxt(p.entrega)+(p.entrega<hoyISO()?" · atrasado":"");L.append(h)}
+    const el=document.createElement("div");el.className="row";
+    el.innerHTML=`<div class="dot neu">${esc(p.hora||"·")}</div><div style="min-width:0"><div class="t">${p.cantidad} ${esc(p.producto)}</div><div class="m">${esc([p.cliente,fmt(p.total),p.notas].filter(Boolean).join(" · "))}</div></div><div class="btns"><button class="ghost sm ok">Entregado</button><button class="ghost sm bad">Cancelar</button></div>`;
+    const [ok,no]=el.querySelectorAll("button");
+    ok.onclick=()=>busy(ok,"…",async()=>{try{const r=await run("cambiarPedido",p.id,"Entregado");P=r.pedidos;R=r.resumen;renderPedidos();renderResumen();toast("Entregado y registrado como venta")}catch(e){toast("No se pudo")}});
+    no.onclick=()=>confirmar(no,"¿Seguro?",()=>busy(no,"…",async()=>{try{const r=await run("cambiarPedido",p.id,"Cancelado");P=r.pedidos;renderPedidos();toast("Pedido cancelado y quitado del calendario")}catch(e){toast("No se pudo")}}));
+    L.append(el)});
+  const H=$("pedHist");H.replaceChildren();
+  if(!hist.length)H.innerHTML='<div class="empty">Aquí verás los pedidos ya entregados.</div>';
+  hist.forEach(p=>{const el=document.createElement("div");el.className="row two";
+    el.innerHTML=`<div style="min-width:0"><div class="t">${p.cantidad} ${esc(p.producto)}</div><div class="m">${esc(diaTxt(p.entrega)+(p.cliente?" · "+p.cliente:""))}</div></div><div class="amt"><span class="tag ${p.estado==="Entregado"?"ok":"low"}">${esc(p.estado)}</span><div class="m num">${fmt(p.total)}</div></div>`;H.append(el)});
+}
+function totPed(){$("pedTotal").textContent=fmt(num($("pedCant").value)*num($("pedPrecio").value))}
+$("addPed").onclick=()=>{
+  const s=S.ped;s.prod=C.productos[0];
+  chips($("pedProd"),C.productos,s.prod&&s.prod.nombre,p=>{s.prod=p;$("pedPrecio").value=p.menudeo||"";totPed()},p=>esc(p.nombre)+(p.menudeo?`<small>$${p.menudeo}</small>`:""));
+  const dl=$("cliList");dl.replaceChildren();C.clientes.forEach(c=>dl.append(new Option(c)));
+  const m=new Date();m.setDate(m.getDate()+1);$("pedFecha").value=m.getFullYear()+"-"+pad(m.getMonth()+1)+"-"+pad(m.getDate());
+  $("pedCli").value="";$("pedHora").value="";$("pedNotas").value="";$("pedCant").value=1;$("pedPrecio").value=s.prod?s.prod.menudeo:"";$("pedErr").hidden=true;totPed();show("sheetPed")};
+stepper("pedMinus","pedPlus","pedCant",1,totPed);$("pedPrecio").oninput=totPed;
+$("formPed").addEventListener("submit",async e=>{e.preventDefault();$("pedErr").hidden=true;
+  const p={cliente:$("pedCli").value.trim(),producto:S.ped.prod&&S.ped.prod.nombre,cantidad:num($("pedCant").value)||1,precio:num($("pedPrecio").value),entrega:$("pedFecha").value,hora:$("pedHora").value,notas:$("pedNotas").value.trim()};
+  if(!p.entrega)return err("ped","Elige la fecha de entrega.");
+  try{await busy($("pedSave"),"Agendando…",async()=>{const r=await run("guardarPedido",p);P=r.pedidos;renderPedidos();hide();toast(r.calendario?"Pedido guardado y agendado":"Pedido guardado (no se pudo agendar en Calendar)")})}catch(e){err("ped","No se pudo guardar: "+(e&&e.message||e))}});
+
+/* ---------- PRODUCCIÓN ---------- */
+function renderProd(){
+  const L=$("prodList");L.replaceChildren();
+  if(!PR.registros.length)L.innerHTML='<div class="empty">Aún no registras producción. Cada vez que hornees, anótalo aquí y se descuentan tus insumos.</div>';
+  let last=null;
+  PR.registros.forEach(r=>{
+    if(r.fecha!==last){last=r.fecha;const h=document.createElement("div");h.className="day";h.textContent=diaTxt(r.fecha);L.append(h)}
+    const el=document.createElement("div");el.className="row two";el.style.gridTemplateColumns="1fr";
+    el.innerHTML=`<div style="min-width:0"><div class="t">${esc(r.producto)}</div><div class="m" style="white-space:normal">${r.piezas} pzas · ${r.batches} batch · costo ${fmt(r.costo)}${r.merma?` · <b style="color:var(--out)">merma ${fmt(r.merma)}</b>`:""}</div></div>
+      <div class="btns" style="align-items:center;justify-content:space-between"><span class="m">Piezas que no se vendieron</span><div class="qty" style="width:120px;grid-template-columns:34px 1fr 34px"><button type="button">−</button><input inputmode="numeric" value="${r.noVendidas}" aria-label="No vendidas de ${esc(r.producto)}"><button type="button">+</button></div></div>`;
+    const [mn,inp,pl]=[el.querySelectorAll("button")[0],el.querySelector("input"),el.querySelectorAll("button")[1]];
+    let t;const save=()=>{clearTimeout(t);t=setTimeout(async()=>{try{PR=await run("guardarNoVendidas",r.id,num(inp.value));renderProd();toast("Merma guardada")}catch(e){toast("No se pudo guardar")}},900)};
+    mn.onclick=()=>{inp.value=Math.max(0,num(inp.value)-1);save()};pl.onclick=()=>{inp.value=Math.min(r.piezas,num(inp.value)+1);save()};inp.onchange=save;
+    L.append(el)});
+  const box=$("planBox");if(!box.dataset.done){box.dataset.done=1;
+    PR.productos.filter(p=>p.tieneReceta).forEach(p=>{const d=document.createElement("div");d.className="hrow";
+      d.innerHTML=`<span style="min-width:0">${esc(p.nombre)}</span><div class="qty" style="width:130px;grid-template-columns:36px 1fr 36px"><button type="button">−</button><input inputmode="decimal" value="0" data-prod="${esc(p.nombre)}" aria-label="Batches de ${esc(p.nombre)}"><button type="button">+</button></div>`;
+      const [a,b]=d.querySelectorAll("button"),i=d.querySelector("input");a.onclick=()=>i.value=Math.max(0,num(i.value)-1);b.onclick=()=>i.value=num(i.value)+1;box.append(d)});
+    if(!box.children.length)box.innerHTML='<p class="note">Agrega recetas en la pestaña Recetas de tu hoja para usar el planeador.</p>'}
+}
+$("calcSuper").onclick=()=>busy($("calcSuper"),"Calculando…",async()=>{
+  const plan={};document.querySelectorAll("#planBox input").forEach(i=>{if(num(i.value)>0)plan[i.dataset.prod]=num(i.value)});
+  if(!Object.keys(plan).length){$("superOut").innerHTML='<p class="note">Pon al menos un batch.</p>';return}
+  try{const r=await run("listaSuper",plan);const comprar=r.items.filter(i=>i.falta>0);
+    $("superOut").innerHTML=comprar.length?`<div class="scroll"><table class="tbl"><thead><tr><th>Insumo</th><th class="r">Falta</th><th class="r">Comprar</th><th class="r">Costo</th></tr></thead><tbody>${comprar.map(i=>`<tr><td>${esc(i.insumo)}<div class="m">${esc(i.presentacion)}</div></td><td class="r num">${cantTxt(i.falta,i.unidad)}</td><td class="r num">${i.comprar||"–"}</td><td class="r num">${i.costo?fmt(i.costo):"–"}</td></tr>`).join("")}</tbody></table></div><div class="totalbox" style="margin-top:10px"><span class="label">Total del súper</span><b class="num">${fmt(r.total)}</b></div>`
+      :'<p class="note">Tienes todo lo necesario en tu inventario. 🎉</p>'}catch(e){$("superOut").innerHTML='<p class="err">No pude calcular. Intenta otra vez.</p>'}});
+function calcProd(){const p=S.prod.p,b=num($("prodB").value);if(!p)return;$("prodPz").textContent=Math.round(b*(p.piezas||1));$("prodCost").textContent=fmt(b*(p.costoBatch||0));
+  $("prodNote").textContent=p.tieneReceta?"Se descontarán de tu inventario los insumos de la receta.":"Este producto no tiene receta en tu hoja, así que no se descuentan insumos."}
+$("addProd").onclick=async()=>{if(!PR){PR=await run("getProduccion")}
+  const ps=PR.productos;if(!ps.length){toast("Agrega productos en la pestaña Productos de tu hoja");return}
+  S.prod.p=ps[0];chips($("prodProd"),ps,ps[0].nombre,p=>{S.prod.p=p;calcProd()});
+  $("prodB").value=1;$("prodFecha").value=hoyISO();$("prodErr").hidden=true;calcProd();show("sheetProd")};
+stepper("prodMinus","prodPlus","prodB",0,calcProd);
+$("formProd").addEventListener("submit",async e=>{e.preventDefault();$("prodErr").hidden=true;
+  if(!(num($("prodB").value)>0))return err("prod","Pon cuántos batches.");
+  try{await busy($("prodSave"),"Guardando…",async()=>{const r=await run("registrarProduccion",{producto:S.prod.p.nombre,batches:num($("prodB").value),fecha:$("prodFecha").value});
+    PR=r.produccion;INV=null;renderProd();hide();toast(r.faltantes.length?"Guardado. Ojo, se acaba: "+r.faltantes.slice(0,3).join(", "):"Producción guardada")})}
+  catch(e){err("prod","No se pudo guardar: "+(e&&e.message||e))}});
+
+/* ---------- INVENTARIO ---------- */
+const bajo=i=>i.existencia<0||(i.minimo!==null&&i.existencia<i.minimo);
+function renderInv(){
+  $("invLow").textContent=INV.filter(bajo).length;$("invAll").textContent=INV.length;
+  document.querySelectorAll("#v-inventario .seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.f===invF));
+  const q=$("invQ").value.trim().toLowerCase();
+  const items=INV.filter(i=>(invF==="todos"||bajo(i))&&(!q||i.insumo.toLowerCase().includes(q))).sort((a,b)=>bajo(b)-bajo(a)||a.insumo.localeCompare(b.insumo));
+  const L=$("invList");L.replaceChildren();
+  if(!items.length)L.innerHTML=`<div class="empty">${invF==="bajos"?"Nada por acabarse. Pon un mínimo a tus insumos clave para que te avise.":"No encontré ese insumo."}</div>`;
+  items.forEach(i=>{const b=document.createElement("button");b.type="button";b.className="row two tap";
+    const tag=bajo(i)?'<span class="tag low">Comprar</span>':i.minimo!==null?'<span class="tag ok">Bien</span>':"";
+    b.innerHTML=`<div style="min-width:0"><div class="t">${esc(i.insumo)}</div><div class="m">${i.minimo!==null?"Mínimo "+cantTxt(i.minimo,i.unidad):"Sin mínimo"}${i.actualizado?" · "+esc(i.actualizado):""}</div></div><div class="amt num">${cantTxt(i.existencia,i.unidad)}<div>${tag}</div></div>`;
+    b.onclick=()=>{S.inv=i;$("tInv").textContent=i.insumo;$("invInfo").textContent=`En ${i.unidad||"unidades"}.`+(i.presentacion?` Presentación: ${i.presentacion} (${cantTxt(i.contenido,i.unidad)}).`:"");
+      $("invEx").value=i.existencia;$("invMin").value=i.minimo===null?"":i.minimo;$("invErr").hidden=true;show("sheetInv")};
+    L.append(b)});
+}
+$("invQ").oninput=()=>INV&&renderInv();
+document.querySelectorAll("#v-inventario .seg button").forEach(b=>b.onclick=()=>{invF=b.dataset.f;renderInv()});
+$("formInv").addEventListener("submit",async e=>{e.preventDefault();
+  try{await busy($("invSave"),"Guardando…",async()=>{INV=await run("guardarInventario",{insumo:S.inv.insumo,existencia:$("invEx").value,minimo:$("invMin").value.trim()});renderInv();hide();toast("Inventario actualizado")})}
+  catch(e){err("inv","No se pudo guardar.")}});
+
+/* ---------- META ---------- */
+function renderMeta(){
+  $("metaMes").textContent="Meta de "+M.mes;
+  $("metaVentas").textContent=fmt0(M.ventas);$("metaDe").textContent=M.meta?"de "+fmt0(M.meta)+" · "+Math.round(M.ventas/M.meta*100)+"%":"Ponte una meta para ver tu avance";
+  $("metaBar").style.width=M.meta?Math.min(100,M.ventas/M.meta*100)+"%":"0%";
+  $("metaFalta").textContent=fmt0(Math.max(0,M.meta-M.ventas));$("metaDia").textContent=M.meta?fmt0(M.porDia):"–";
+  const d=M.ventasPrevAlDia?Math.round((M.ventas-M.ventasPrevAlDia)/M.ventasPrevAlDia*100):null;
+  $("metaComp").textContent=(d===null?"":"Vas "+(d>=0?d+"% arriba":Math.abs(d)+"% abajo")+" del mes pasado a estas alturas. ")+"Quedan "+M.diasRestantes+" días.";
+  const mx=Math.max(1,...M.semanas);const W=$("weeks");W.replaceChildren();const sem=Math.min(4,Math.floor((M.dia-1)/7));
+  M.semanas.forEach((v,i)=>{if(i===4&&M.diasMes<=28)return;const c=document.createElement("div");if(i===sem)c.className="now";
+    c.innerHTML=`<span class="num">${v?fmt0(v):""}</span><i style="height:${Math.max(3,v/mx*70)}px"></i><span>Sem ${i+1}</span>`;W.append(c)});
+  const S2=$("stars");S2.replaceChildren();const top=M.productos.slice(0,5);const tx=Math.max(1,...top.map(p=>p.total));
+  if(!top.length)S2.innerHTML='<p class="note">Cuando registres ventas este mes aparecerá aquí lo que más vendes.</p>';
+  top.forEach((p,i)=>{const b=document.createElement("div");b.className="bar";
+    b.innerHTML=`<span style="min-width:0">${i===0?"⭐ ":""}<b>${esc(p.producto)}</b> · ${p.piezas} pzas</span><span class="num">${fmt0(p.total)}</span><div class="track"><div class="fill" style="width:${p.total/tx*100}%"></div></div>`;S2.append(b)});
+  $("mailState").textContent=M.correo?"Activado: lunes 8 am":"Desactivado";$("mailToggle").textContent=M.correo?"Desactivar":"Activar";
+  renderResumen();
+}
+$("editMeta").onclick=()=>{$("metaIn").value=M&&M.meta||"";show("sheetMeta")};
+$("formMeta").addEventListener("submit",async e=>{e.preventDefault();try{M=await run("setMeta",num($("metaIn").value));renderMeta();hide();toast("Meta guardada")}catch(x){toast("No se pudo guardar")}});
+$("mailToggle").onclick=()=>busy($("mailToggle"),"…",async()=>{try{M=await run("activarCorreo",!M.correo);renderMeta();toast(M.correo?"Listo, te llegará cada lunes":"Correo desactivado")}catch(e){toast("No se pudo cambiar")}});
+$("mailNow").onclick=()=>busy($("mailNow"),"Enviando…",async()=>{try{await run("enviarResumenSemanal");toast("Revisa tu Gmail")}catch(e){toast("No se pudo enviar")}});
+
+/* ---------- CATÁLOGO: productos, recetas, insumos ---------- */
+document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>ir(b.dataset.go));
+const insDe=n=>K&&K.insumos.find(i=>i.nombre.toLowerCase()===String(n).trim().toLowerCase());
+function renderCat(){
+  const L=$("catList");L.replaceChildren();
+  if(!K.productos.length)L.innerHTML='<div class="empty">Aún no tienes productos. Toca <b>+ Producto</b>.</div>';
+  K.productos.forEach(p=>{const b=document.createElement("button");b.type="button";b.className="row two tap";
+    const mg=p.menudeo&&p.costoPieza?Math.round((p.menudeo-p.costoPieza)/p.menudeo*100):null;
+    const tag=!p.receta.length?'<span class="tag warn">Sin receta</span>':mg!==null?`<span class="tag ${mg<40?"low":"ok"}">${mg}% margen</span>`:"";
+    b.innerHTML=`<div style="min-width:0"><div class="t">${esc(p.nombre)}</div><div class="m">${p.receta.length} ingredientes · ${p.piezas||1} pzas por batch${p.costoPieza?" · cuesta "+fmt(p.costoPieza):""}</div></div><div class="amt num">${p.menudeo?fmt(p.menudeo):"Sin precio"}<div>${tag}</div></div>`;
+    b.onclick=()=>openCat(p);L.append(b)});
+}
+function ingRow(x){
+  const d=document.createElement("div");d.className="ing";d.style.cssText="display:grid;grid-template-columns:minmax(0,1fr) 90px 44px 36px;gap:6px;align-items:center";
+  d.innerHTML=`<input class="in-text" list="insList" placeholder="Insumo" aria-label="Insumo" style="padding:10px"><input class="in-text" inputmode="decimal" placeholder="Cant." aria-label="Cantidad" style="padding:10px;text-align:right"><span class="m u" style="text-align:center"></span><button type="button" class="x" aria-label="Quitar ingrediente" style="width:32px;height:32px">×</button>`;
+  const [ins,cant]=d.querySelectorAll("input"),u=d.querySelector(".u");
+  ins.value=x&&x.insumo||"";cant.value=x&&x.cantidad||"";
+  const upd=()=>{const i=insDe(ins.value);u.textContent=i?i.unidad:(x&&x.unidad||"");ins.style.borderColor=ins.value&&!i?"var(--out)":"";calcCat()};
+  ins.oninput=upd;cant.oninput=calcCat;d.querySelector("button").onclick=()=>{d.remove();calcCat()};
+  $("catIngs").append(d);upd();
+}
+function leerReceta(){return [...document.querySelectorAll("#catIngs .ing")].map(d=>{const[a,b]=d.querySelectorAll("input");const i=insDe(a.value);return{insumo:i?i.nombre:a.value.trim(),cantidad:num(b.value),unidad:i?i.unidad:d.querySelector(".u").textContent,ok:!!i}}).filter(x=>x.insumo||x.cantidad)}
+function calcCat(){
+  const rec=leerReceta();const ing=rec.reduce((s,x)=>{const i=insDe(x.insumo);return s+(i?i.costoUnidad*x.cantidad:0)},0);
+  const pz=Math.max(1,num($("catPiezas").value));const c=(ing+num($("catInd").value))/pz;const pr=num($("catMenudeo").value);
+  $("catCosto").textContent=fmt(c);$("catGana").textContent=pr?fmt(pr-c)+(pr?" · "+Math.round((pr-c)/pr*100)+"%":""):"–";
+}
+["catPiezas","catInd","catMenudeo"].forEach(id=>$(id).oninput=calcCat);
+function openCat(p){
+  S.cat={original:p?p.nombre:""};$("tCat").textContent=p?p.nombre:"Nuevo producto";
+  $("catNombre").value=p?p.nombre:"";$("catMenudeo").value=p&&p.menudeo||"";$("catMayoreo").value=p&&p.mayoreo||"";
+  $("catPiezas").value=p?p.piezas||1:1;$("catInd").value=p?p.indirectos||"":10;$("catNotas").value=p?p.notas:"";
+  const dl=$("insList");dl.replaceChildren();K.insumos.forEach(i=>dl.append(new Option(i.nombre)));
+  $("catIngs").replaceChildren();(p&&p.receta.length?p.receta:[null,null,null]).forEach(ingRow);
+  $("catDel").hidden=!p;$("catErr").hidden=true;calcCat();show("sheetCat");
+}
+$("addProducto").onclick=()=>openCat(null);$("catAddIng").onclick=()=>ingRow(null);
+async function trasCatalogo(k,msg){K=k;renderCat();hide();toast(msg);
+  try{C=await run("getCatalogos");mezclar();rapidos();PR=null;const box=$("planBox");box.replaceChildren();delete box.dataset.done}catch(e){}}
+$("formCat").addEventListener("submit",async e=>{e.preventDefault();$("catErr").hidden=true;
+  const rec=leerReceta();const malos=rec.filter(x=>!x.ok);
+  if(malos.length)return err("cat",`"${malos[0].insumo||"?"}" no está en tus insumos. Elígelo de la lista o créalo con + Insumo.`);
+  const p={original:S.cat.original,nombre:$("catNombre").value.trim(),menudeo:num($("catMenudeo").value),mayoreo:num($("catMayoreo").value),piezas:num($("catPiezas").value)||1,indirectos:num($("catInd").value),notas:$("catNotas").value.trim(),receta:rec};
+  if(!p.nombre)return err("cat","Ponle nombre.");
+  try{await busy($("catSave"),"Guardando…",async()=>trasCatalogo(await run("guardarProducto",p),"Producto guardado en tu hoja"))}catch(x){err("cat","No se pudo guardar: "+(x&&x.message||x))}});
+$("catDel").onclick=()=>confirmar($("catDel"),"Toca otra vez para borrar",()=>busy($("catDel"),"Borrando…",async()=>{try{await trasCatalogo(await run("borrarProducto",S.cat.original),"Producto borrado")}catch(x){err("cat","No se pudo borrar.")}}));
+function insCU(){const c=num($("insCont").value),p=num($("insPrecio").value);$("insCU").textContent=c&&p?"Te sale a $"+(p/c).toFixed(4)+" por "+S.ins.uni:""}
+$("catNewIns").onclick=()=>$("addInsumo").onclick();
+$("addInsumo").onclick=()=>{S.ins={cat:K.categoriasInsumo[0]||"",uni:"g"};
+  chips($("insCat"),K.categoriasInsumo,S.ins.cat,v=>S.ins.cat=v);
+  chips($("insUni"),K.unidades,S.ins.uni,v=>{S.ins.uni=v;$("insUniTxt").textContent=v;insCU()});
+  ["insNombre","insPres","insCont","insPrecio"].forEach(id=>$(id).value="");$("insUniTxt").textContent="g";$("insErr").hidden=true;$("insCU").textContent="";show("sheetIns")};
+$("insCont").oninput=insCU;$("insPrecio").oninput=insCU;
+$("formIns").addEventListener("submit",async e=>{e.preventDefault();$("insErr").hidden=true;
+  const i={nombre:$("insNombre").value.trim(),categoria:S.ins.cat,unidad:S.ins.uni,presentacion:$("insPres").value.trim(),contenido:num($("insCont").value),precio:num($("insPrecio").value)};
+  if(!i.nombre)return err("ins","Ponle nombre.");if(!(i.contenido>0&&i.precio>0))return err("ins","Pon cuánto trae y cuánto cuesta, para calcular el costo.");
+  try{await busy($("insSave"),"Guardando…",async()=>{K=await run("guardarInsumo",i);INV=null;C.insumos=K.insumos.map(x=>x.nombre);
+    if(!$("sheetCat").hidden){$("sheetIns").hidden=true;const dl=$("insList");dl.replaceChildren();K.insumos.forEach(x=>dl.append(new Option(x.nombre)));ingRow({insumo:i.nombre});}else hide();
+    toast("Insumo agregado");renderCat()})}catch(x){err("ins","No se pudo guardar: "+(x&&x.message||x))}});
+
+/* ---------- arranque ---------- */
+function setup(msg){$("loading").hidden=true;document.querySelectorAll(".view").forEach(v=>v.hidden=true);$("setup").hidden=false;
+  $("cfgUrl").value=CFG.url;$("cfgClave").value=CFG.clave;if(msg){$("cfgErr").textContent=msg;$("cfgErr").hidden=false}else $("cfgErr").hidden=true}
+$("ajustes").onclick=()=>setup();
+$("cfgSave").onclick=()=>{const u=$("cfgUrl").value.trim(),c=$("cfgClave").value.trim();
+  if(!/^https:\/\/script\.google\.com\/.+\/exec\/?$/.test(u)){$("cfgErr").textContent="La URL debe empezar con https://script.google.com/ y terminar en /exec";$("cfgErr").hidden=false;return}
+  if(!c){$("cfgErr").textContent="Pon la clave.";$("cfgErr").hidden=false;return}
+  CFG={url:u,clave:c};LS.set("osopan.url",u);LS.set("osopan.clave",c);$("setup").hidden=true;$("loading").hidden=false;$("loading").textContent="Abriendo tu hoja…";cargar()};
+async function cargar(){
+  if(!CFG.url||!CFG.clave)return setup();
+  try{C=await run("getCatalogos");mezclar();rapidos();R=C.resumen;$("loading").hidden=true;ir("inicio");renderResumen();
+    run("getMeta").then(m=>{M=m;renderResumen()}).catch(()=>{})}
+  catch(e){setup("No pude abrir la hoja: "+(e&&e.message||e))}
+}
+cargar();
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+</script>
+</body>
+</html>
