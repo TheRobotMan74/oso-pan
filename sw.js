@@ -1,6 +1,6 @@
 // Guarda la app para que abra rápido y sin internet. Los datos de la hoja nunca se guardan aquí:
 // esas llamadas van directo a Google.
-var VERSION = 'osopan-v2.2';
+var VERSION = 'osopan-v2.3';
 var ARCHIVOS = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png',
                 'icons/maskable-512.png', 'icons/apple-touch-icon.png', 'icons/favicon-32.png'];
 

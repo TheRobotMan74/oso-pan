@@ -147,7 +147,8 @@ nav.tabs button[aria-current="page"]{color:var(--crust);background:var(--surface
 .ol{border:1px solid var(--line);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:8px;background:var(--surface)}
 .ol-top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
 .ol .in-text{padding:10px}
-.ol-nums{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:8px;align-items:center}
+.ol-nums{display:grid;grid-template-columns:136px minmax(0,1fr) auto;gap:8px;align-items:center}
+.ol-nums .qty.sm{grid-template-columns:34px minmax(0,1fr) 34px}
 .ol-sub{min-width:72px;text-align:right}
 .err{color:var(--out);font-size:.9rem}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));background:var(--fg);color:var(--bg);padding:10px 12px 10px 18px;border-radius:16px;width:max-content;font-weight:600;z-index:30;display:flex;gap:12px;align-items:center;max-width:calc(100% - 32px)}
@@ -611,9 +612,10 @@ function lineaOut(x){
   C.categoriasGasto.forEach(c=>cat.append(new Option(c,c)));
   ins.append(new Option("Elige el insumo…",""));C.insumos.forEach(i=>ins.append(new Option(i,i)));
   cat.value=x&&x.categoria||(x&&x.insumo?"Materia prima":C.categoriasGasto[0]||"");
-  ins.value=x&&x.insumo||"";con.value=x&&x.concepto||"";q.value=x&&x.cantidad||1;p.value=x&&x.precio||"";
-  if(x&&x.concepto&&x.leido){const h=d.querySelector(".ol-hint");h.hidden=false;h.textContent="En el ticket dice: "+x.concepto}
-  const mode=()=>{const mp=cat.value==="Materia prima";ins.hidden=!mp;con.hidden=mp;};
+  ins.value=x&&x.insumo||"";con.value=x&&x.concepto||"";q.value=x&&x.cantidad||1;
+  p.value=x&&x.precio?(Math.abs(Math.round(x.precio*100)-x.precio*100)<1e-6?x.precio.toFixed(2):String(x.precio)):"";
+  const h=d.querySelector(".ol-hint");if(x&&x.concepto&&x.leido)h.textContent="En el ticket dice: "+x.concepto;
+  const mode=()=>{const mp=cat.value==="Materia prima";ins.hidden=!mp;con.hidden=mp;h.hidden=!(mp&&h.textContent)};
   cat.onchange=()=>{mode();totOut()};const [rm,mn,pl]=d.querySelectorAll("button");
   rm.onclick=()=>{d.remove();totOut()};mn.onclick=()=>{q.value=Math.max(1,num(q.value)-1);totOut()};pl.onclick=()=>{q.value=num(q.value)+1;totOut()};
   q.oninput=totOut;p.oninput=totOut;ins.onchange=totOut;mode();$("outLines").append(d);
@@ -648,12 +650,19 @@ $("outFoto").onchange=async()=>{
       if(r.proveedor){if(C.proveedores.indexOf(r.proveedor)<0)C.proveedores.push(r.proveedor);s.prov=r.proveedor;chips($("outProv"),C.proveedores,s.prov,v=>s.prov=s.prov===v?"":v)}
       s.ticketTotal=r.total||0;
       const vacias=lineasOut().every(l=>!l.precio);
-      if(r.items&&r.items.length&&vacias){$("outLines").replaceChildren();r.items.forEach(it=>lineaOut(Object.assign({leido:true},it)))}
+      if(r.items&&r.items.length&&vacias){$("outLines").replaceChildren();r.items.forEach(it=>lineaOut(Object.assign({leido:!it.extra},it)))}
       else if(vacias&&r.total){$("outLines").replaceChildren();lineaOut({cantidad:1,precio:r.total})}
       totOut();
       $("outTicketT").textContent="Ticket guardado ✓";
-      $("outTicketS").textContent=r.items&&r.items.length?"Leí "+r.items.length+" artículos. Revisa categoría e insumo de cada uno.":r.total?"Leí el total, pero no los artículos. Sepáralos tú si quieres.":"No pude leerlo bien, llénalo tú.";
-    }else{$("outTicketT").textContent="Ticket guardado ✓";$("outTicketS").textContent="Llénalo tú (la lectura automática no está activada).";}
+      const n=(r.items||[]).filter(i=>!i.extra).length,art=n===1?"1 artículo":n+" artículos";
+      $("outTicketS").textContent=!n?(r.total?"Leí el total, pero no los artículos. Sepáralos tú si quieres.":"No pude leerlo bien, llénalo tú.")
+        :!vacias?"Ya tenías artículos escritos, así que no los cambié."
+        :r.cuadra===undefined?"Leí "+art+". Revisa categoría e insumo de cada uno."
+        :r.cuadra?"Leí "+art+" y cuadran con el total ✓ Revisa la categoría de cada uno."
+        :r.resto?"Leí "+art+". "+fmt(r.resto)+" no los pude separar y los dejé en un renglón aparte."
+        :r.sinPrecio?"Leí "+art+", pero "+(r.sinPrecio===1?"a uno no le":"a "+r.sinPrecio+" no les")+" encontré precio. Llénalo tú."
+        :"Leí "+art+", pero no cuadran con el total. Revisa los precios.";
+    }else{$("outTicketT").textContent="Ticket guardado ✓";$("outTicketS").textContent=/Drive|Files/i.test(r.motivo||"")?"Llénalo tú (la lectura automática no está activada).":"No pude leerlo, llénalo tú.";}
   }catch(e){s.subiendo=false;$("outTicketT").textContent="No se pudo subir la foto";$("outTicketS").textContent="Toca para intentar otra vez"}
 };
 $("formOut").addEventListener("submit",async e=>{
