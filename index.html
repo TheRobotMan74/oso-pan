@@ -136,8 +136,21 @@ nav.tabs button[aria-current="page"]{color:var(--crust);background:var(--surface
 .ticket img{width:56px;height:56px;object-fit:cover;border-radius:10px;flex:none}
 .ticket .ph{width:56px;height:56px;border-radius:10px;background:var(--surface-2);display:grid;place-items:center;flex:none;font-size:1.5rem}
 .ticket input{display:none}
+.cart{display:flex;flex-direction:column;gap:8px}
+.ci{display:grid;grid-template-columns:minmax(0,1fr) 128px;gap:10px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:8px 8px 8px 14px;background:var(--surface)}
+.ci.on{border-color:var(--in);background:var(--in-soft)}
+.ci-name{border:0;background:none;color:inherit;font:inherit;text-align:left;padding:4px 0;cursor:pointer;display:flex;flex-direction:column;min-width:0}
+.ci-name b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ci-name span{font-size:.85rem;color:var(--muted)}
+.qty.sm{grid-template-columns:38px minmax(0,1fr) 38px}
+.qty.sm input{font-size:1.05rem;padding:8px 0}
+.ol{border:1px solid var(--line);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:8px;background:var(--surface)}
+.ol-top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.ol .in-text{padding:10px}
+.ol-nums{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:8px;align-items:center}
+.ol-sub{min-width:72px;text-align:right}
 .err{color:var(--out);font-size:.9rem}
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));background:var(--fg);color:var(--bg);padding:10px 12px 10px 18px;border-radius:999px;font-weight:600;z-index:30;display:flex;gap:12px;align-items:center;max-width:calc(100% - 32px)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));background:var(--fg);color:var(--bg);padding:10px 12px 10px 18px;border-radius:16px;width:max-content;font-weight:600;z-index:30;display:flex;gap:12px;align-items:center;max-width:calc(100% - 32px)}
 .toast button{border:0;background:transparent;color:var(--wheat);font:700 .95rem var(--body);cursor:pointer;padding:4px 8px}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--wheat);outline-offset:2px}
 </style>
@@ -279,59 +292,60 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 
 <div class="scrim" id="scrim" hidden></div>
 
-<!-- Ingreso -->
+<!-- Ingreso (carrito) -->
 <div class="sheet" id="sheetIn" hidden role="dialog" aria-modal="true" aria-labelledby="tIn">
   <form id="formIn" autocomplete="off">
-    <h3><span id="tIn">Nuevo ingreso</span><button type="button" class="x" data-close aria-label="Cerrar">×</button></h3>
-    <div><span class="fl">Tipo</span><div class="chips" id="inTipo"></div></div>
-    <div id="inProdBox"><span class="fl">Producto</span><div class="chips" id="inProd"></div></div>
-    <div id="inConceptoBox" hidden><label class="fl" for="inConcepto">Concepto</label><input class="in-text" id="inConcepto" placeholder="Ej. préstamo, apoyo, otro"></div>
-    <div><span class="fl">Cliente</span><div class="chips" id="inCli"></div></div>
-    <div class="split">
-      <div><span class="fl">Cantidad</span><div class="qty"><button type="button" id="inMinus" aria-label="Menos">−</button><input id="inCant" inputmode="numeric" value="1" aria-label="Cantidad"><button type="button" id="inPlus" aria-label="Más">+</button></div></div>
-      <div><label class="fl" for="inPrecio">Precio c/u</label><div class="money"><span>$</span><input id="inPrecio" inputmode="decimal" placeholder="0"></div></div>
+    <h3><span id="tIn">Nueva venta</span><button type="button" class="x" data-close aria-label="Cerrar">×</button></h3>
+    <div class="chips" id="inTipo"></div>
+    <div id="inVentaBox" style="display:flex;flex-direction:column;gap:16px">
+      <div class="hrow"><span class="fl" style="margin:0">¿Qué vendiste?</span><div class="chips" id="inPrecioTipo"></div></div>
+      <div id="inCart" class="cart"></div>
+      <div><span class="fl">Cliente</span><div class="chips" id="inCli"></div></div>
     </div>
-    <div id="inPrecioTipo" class="chips"></div>
+    <div id="inOtroBox" hidden style="display:flex;flex-direction:column;gap:16px">
+      <div><label class="fl" for="inConcepto">Concepto</label><input class="in-text" id="inConcepto" placeholder="Ej. préstamo, apoyo, otro"></div>
+      <div><label class="fl" for="inMonto">Monto</label><div class="money"><span>$</span><input id="inMonto" inputmode="decimal" placeholder="0"></div></div>
+    </div>
     <div><span class="fl">Forma de pago</span><div class="chips" id="inMet"></div></div>
     <div class="split">
       <div><label class="fl" for="inFecha">Fecha</label><input class="in-text" type="date" id="inFecha"></div>
       <div><label class="fl" for="inNotas">Nota</label><input class="in-text" id="inNotas" placeholder="Opcional"></div>
     </div>
-    <div class="totalbox"><span class="label">Total</span><b class="num" id="inTotal">$0.00</b></div>
+    <div class="totalbox"><span class="label" id="inResumen">Total</span><b class="num" id="inTotal">$0.00</b></div>
     <div class="err" id="inErr" hidden></div>
-    <button class="save in" id="inSave" type="submit">Guardar ingreso</button>
+    <button class="save in" id="inSave" type="submit">Guardar venta</button>
   </form>
 </div>
 
-<!-- Egreso -->
+<!-- Egreso (varios artículos) -->
 <div class="sheet" id="sheetOut" hidden role="dialog" aria-modal="true" aria-labelledby="tOut">
   <form id="formOut" autocomplete="off">
-    <h3><span id="tOut">Nuevo egreso</span><button type="button" class="x" data-close aria-label="Cerrar">×</button></h3>
+    <h3><span id="tOut">Nueva compra</span><button type="button" class="x" data-close aria-label="Cerrar">×</button></h3>
     <label class="ticket" for="outFoto">
       <span class="ph" id="outPh">📷</span><img id="outImg" alt="Ticket" hidden>
-      <span style="min-width:0"><b id="outTicketT">Tomar foto del ticket</b><br><span class="note" id="outTicketS">Se guarda en tu Drive y leo el total por ti</span></span>
+      <span style="min-width:0"><b id="outTicketT">Tomar foto del ticket</b><br><span class="note" id="outTicketS">Lo guardo en tu Drive y leo los artículos por ti</span></span>
       <input type="file" id="outFoto" accept="image/*" capture="environment">
     </label>
-    <div><span class="fl">Categoría</span><div class="chips" id="outCat"></div></div>
-    <div id="outInsBox"><label class="fl" for="outIns">Insumo</label><select class="in-text" id="outIns"></select></div>
-    <div><span class="fl">¿De quién es el gasto?</span><div class="chips" id="outAmb"></div></div>
-    <div><span class="fl">Dónde compraste</span><div class="chips" id="outProv"></div></div>
     <div class="split">
-      <div><span class="fl">Cantidad</span><div class="qty"><button type="button" id="outMinus" aria-label="Menos">−</button><input id="outCant" inputmode="decimal" value="1" aria-label="Cantidad"><button type="button" id="outPlus" aria-label="Más">+</button></div></div>
-      <div><label class="fl" for="outPrecio">Precio c/u</label><div class="money"><span>$</span><input id="outPrecio" inputmode="decimal" placeholder="0"></div></div>
+      <div><span class="fl">¿De quién?</span><div class="chips" id="outAmb"></div></div>
+      <div><label class="fl" for="outFecha">Fecha</label><input class="in-text" type="date" id="outFecha"></div>
+    </div>
+    <div><span class="fl">Dónde compraste</span><div class="chips" id="outProv"></div></div>
+    <div>
+      <div class="hrow" style="margin-bottom:8px"><span class="fl" style="margin:0" id="outCount">Artículos</span><button type="button" class="ghost sm" id="outAdd">+ Artículo</button></div>
+      <div id="outLines" style="display:flex;flex-direction:column;gap:10px"></div>
     </div>
     <div><span class="fl">Forma de pago</span><div class="chips" id="outMet"></div></div>
     <div class="split">
-      <div><label class="fl" for="outFecha">Fecha</label><input class="in-text" type="date" id="outFecha"></div>
       <div><label class="fl" for="outTicket">Folio</label><input class="in-text" id="outTicket" placeholder="Opcional"></div>
+      <div><label class="fl" for="outNotas">Nota</label><input class="in-text" id="outNotas" placeholder="Opcional"></div>
     </div>
-    <div><label class="fl" for="outNotas">Nota</label><input class="in-text" id="outNotas" placeholder="Opcional"></div>
     <div class="totalbox"><span class="label">Total</span><b class="num" id="outTotal">$0.00</b></div>
+    <p class="note" id="outCheck" hidden></p>
     <div class="err" id="outErr" hidden></div>
-    <button class="save out" id="outSave" type="submit">Guardar egreso</button>
+    <button class="save out" id="outSave" type="submit">Guardar compra</button>
   </form>
 </div>
-
 <!-- Pedido -->
 <div class="sheet" id="sheetPed" hidden role="dialog" aria-modal="true" aria-labelledby="tPed">
   <form id="formPed" autocomplete="off">
@@ -543,80 +557,124 @@ function renderResumen(){
 }
 document.querySelectorAll("#v-inicio .seg button").forEach(b=>b.onclick=()=>{periodo=b.dataset.p;try{localStorage.setItem("osopan.periodo",periodo)}catch(e){}renderResumen()});
 
-/* ---------- Ingreso ---------- */
+/* ---------- Ingreso: carrito ---------- */
 function precioDe(prod,tipo){if(!prod)return 0;return tipo==="Mayoreo"&&prod.mayoreo?prod.mayoreo:(prod.menudeo||prod.mayoreo||0)}
-function totIn(){$("inTotal").textContent=fmt(num($("inCant").value)*num($("inPrecio").value))}
-function setPrecio(){const p=precioDe(S.in.prod,S.in.ptipo);$("inPrecio").value=p?p:"";totIn()}
-function openIn(pre){
-  const s=S.in;s.tipo="Venta";s.prod=(pre&&pre.nombre?pre:C.productos[0])||null;s.cli="";s.met=C.metodos[0]||"Efectivo";s.ptipo="Menudeo";
-  chips($("inTipo"),C.tiposIngreso.length?C.tiposIngreso:["Venta","Otro ingreso"],s.tipo,v=>{s.tipo=v;$("inProdBox").hidden=v!=="Venta";$("inConceptoBox").hidden=v==="Venta";$("inPrecioTipo").hidden=v!=="Venta";if(v!=="Venta"){$("inPrecio").value="";$("inCant").value=1}else setPrecio();totIn()});
-  chips($("inProd"),C.productos,s.prod&&s.prod.nombre,p=>{s.prod=p;setPrecio()},p=>esc(p.nombre)+(p.menudeo?`<small>$${p.menudeo}</small>`:""));
-  chips($("inCli"),C.clientes,s.cli,v=>s.cli=v);
-  chips($("inPrecioTipo"),["Menudeo","Mayoreo"],s.ptipo,v=>{s.ptipo=v;setPrecio()});
-  chips($("inMet"),C.metodos,s.met,v=>s.met=v);
-  $("inProdBox").hidden=false;$("inConceptoBox").hidden=true;$("inPrecioTipo").hidden=false;
-  $("inCant").value=1;$("inConcepto").value="";$("inNotas").value="";$("inFecha").value=hoyISO();$("inErr").hidden=true;
-  setPrecio();show("sheetIn");
+function renderCart(){
+  const s=S.in,el=$("inCart");el.replaceChildren();
+  C.productos.forEach(p=>{const q=s.cart[p.nombre]||0;const pr=precioDe(p,s.ptipo);
+    const d=document.createElement("div");d.className="ci"+(q?" on":"");
+    d.innerHTML=`<button type="button" class="ci-name"><b>${esc(p.nombre)}</b><span class="num">${pr?fmt(pr):"sin precio"}</span></button><div class="qty sm"><button type="button" aria-label="Menos ${esc(p.nombre)}">−</button><input inputmode="numeric" value="${q}" aria-label="Cantidad de ${esc(p.nombre)}"><button type="button" aria-label="Más ${esc(p.nombre)}">+</button></div>`;
+    const [nm,mn,pl]=d.querySelectorAll("button"),inp=d.querySelector("input");
+    const set=v=>{s.cart[p.nombre]=Math.max(0,v);inp.value=s.cart[p.nombre];d.classList.toggle("on",s.cart[p.nombre]>0);totIn()};
+    nm.onclick=()=>set((s.cart[p.nombre]||0)+1);pl.onclick=()=>set((s.cart[p.nombre]||0)+1);mn.onclick=()=>set((s.cart[p.nombre]||0)-1);inp.oninput=()=>set(Math.round(num(inp.value)));
+    el.append(d)});
 }
-stepper("inMinus","inPlus","inCant",1,totIn);$("inPrecio").oninput=totIn;
+function lineasVenta(){const s=S.in;return C.productos.filter(p=>s.cart[p.nombre]>0).map(p=>({producto:p.nombre,cantidad:s.cart[p.nombre],precio:precioDe(p,s.ptipo)}))}
+function totIn(){
+  if(S.in.tipo!=="Venta"){$("inTotal").textContent=fmt(num($("inMonto").value));$("inResumen").textContent="Total";return}
+  const l=lineasVenta();const pz=l.reduce((a,x)=>a+x.cantidad,0);
+  $("inTotal").textContent=fmt(l.reduce((a,x)=>a+x.cantidad*x.precio,0));$("inResumen").textContent=pz?pz+(pz===1?" pieza":" piezas")+(l.length>1?" · "+l.length+" productos":""):"Total";
+}
+function openIn(pre){
+  const s=S.in;s.tipo="Venta";s.cart={};s.cli="";s.met=C.metodos[0]||"Efectivo";s.ptipo="Menudeo";
+  if(pre&&pre.nombre)s.cart[pre.nombre]=1;
+  chips($("inTipo"),C.tiposIngreso.length?C.tiposIngreso:["Venta","Otro ingreso"],s.tipo,v=>{s.tipo=v;$("inVentaBox").hidden=v!=="Venta";$("inOtroBox").hidden=v==="Venta";$("tIn").textContent=v==="Venta"?"Nueva venta":"Otro ingreso";totIn()});
+  chips($("inPrecioTipo"),["Menudeo","Mayoreo"],s.ptipo,v=>{s.ptipo=v;renderCart();totIn()});
+  chips($("inCli"),C.clientes,s.cli,v=>s.cli=s.cli===v?"":v);
+  chips($("inMet"),C.metodos,s.met,v=>s.met=v);
+  $("inVentaBox").hidden=false;$("inOtroBox").hidden=true;$("tIn").textContent="Nueva venta";
+  $("inConcepto").value="";$("inMonto").value="";$("inNotas").value="";$("inFecha").value=hoyISO();$("inErr").hidden=true;
+  renderCart();totIn();show("sheetIn");
+}
+$("inMonto").oninput=totIn;
 $("formIn").addEventListener("submit",async e=>{
-  e.preventDefault();const s=S.in;
-  const v={tipo:s.tipo,producto:s.tipo==="Venta"?(s.prod&&s.prod.nombre||""):$("inConcepto").value.trim(),cliente:s.cli,cantidad:num($("inCant").value)||1,precio:num($("inPrecio").value),
-    pagado:"Pagado",metodo:s.met,ambito:"Negocio",fecha:$("inFecha").value,notas:$("inNotas").value.trim()};
-  if(!(v.precio>0))return err("in","Escribe el precio.");
-  if(!v.producto)return err("in",s.tipo==="Venta"?"Elige el producto.":"Escribe el concepto.");
-  await guardarMov("in","guardarVenta",v,"Ingreso guardado en Ventas");
+  e.preventDefault();const s=S.in;const base={cliente:s.cli,pagado:"Pagado",metodo:s.met,ambito:"Negocio",fecha:$("inFecha").value,notas:$("inNotas").value.trim()};
+  let lista;
+  if(s.tipo==="Venta"){lista=lineasVenta().map(l=>Object.assign({tipo:"Venta"},base,l));
+    if(!lista.length)return err("in","Toca los productos que vendiste.");
+    const sin=lista.find(l=>!(l.precio>0));if(sin)return err("in",sin.producto+" no tiene precio. Pónselo en Mis productos.");}
+  else{const c=$("inConcepto").value.trim(),m=num($("inMonto").value);if(!c)return err("in","Escribe el concepto.");if(!(m>0))return err("in","Escribe el monto.");
+    lista=[Object.assign({tipo:s.tipo,producto:c,cantidad:1,precio:m},base)];}
+  const n=lista.length;
+  await guardarMov("in","guardarVentas",lista,n>1?"Venta guardada ("+n+" productos)":"Venta guardada");
 });
 
-/* ---------- Egreso + ticket ---------- */
-function totOut(){$("outTotal").textContent=fmt(num($("outCant").value)*num($("outPrecio").value))}
+/* ---------- Egreso: varios artículos + ticket ---------- */
+function lineaOut(x){
+  const d=document.createElement("div");d.className="ol";
+  d.innerHTML=`<div class="ol-top"><select class="in-text ol-cat" aria-label="Categoría"></select><button type="button" class="x" aria-label="Quitar artículo" style="width:32px;height:32px">×</button></div>
+    <select class="in-text ol-ins" aria-label="Insumo"></select><input class="in-text ol-con" placeholder="¿Qué compraste?" aria-label="Concepto">
+    <div class="ol-nums"><div class="qty sm"><button type="button" aria-label="Menos">−</button><input class="ol-q" inputmode="decimal" value="1" aria-label="Cantidad"><button type="button" aria-label="Más">+</button></div>
+    <div class="money"><span>$</span><input class="ol-p" inputmode="decimal" placeholder="c/u" aria-label="Precio por pieza"></div><b class="num ol-sub">$0.00</b></div>
+    <div class="note ol-hint" hidden></div>`;
+  const cat=d.querySelector(".ol-cat"),ins=d.querySelector(".ol-ins"),con=d.querySelector(".ol-con"),q=d.querySelector(".ol-q"),p=d.querySelector(".ol-p");
+  C.categoriasGasto.forEach(c=>cat.append(new Option(c,c)));
+  ins.append(new Option("Elige el insumo…",""));C.insumos.forEach(i=>ins.append(new Option(i,i)));
+  cat.value=x&&x.categoria||(x&&x.insumo?"Materia prima":C.categoriasGasto[0]||"");
+  ins.value=x&&x.insumo||"";con.value=x&&x.concepto||"";q.value=x&&x.cantidad||1;p.value=x&&x.precio||"";
+  if(x&&x.concepto&&x.leido){const h=d.querySelector(".ol-hint");h.hidden=false;h.textContent="En el ticket dice: "+x.concepto}
+  const mode=()=>{const mp=cat.value==="Materia prima";ins.hidden=!mp;con.hidden=mp;};
+  cat.onchange=()=>{mode();totOut()};const [rm,mn,pl]=d.querySelectorAll("button");
+  rm.onclick=()=>{d.remove();totOut()};mn.onclick=()=>{q.value=Math.max(1,num(q.value)-1);totOut()};pl.onclick=()=>{q.value=num(q.value)+1;totOut()};
+  q.oninput=totOut;p.oninput=totOut;ins.onchange=totOut;mode();$("outLines").append(d);
+}
+function lineasOut(){return [...document.querySelectorAll("#outLines .ol")].map(d=>{const cat=d.querySelector(".ol-cat").value;const mp=cat==="Materia prima";
+  return{categoria:cat,insumo:mp?d.querySelector(".ol-ins").value:"",concepto:mp?"":d.querySelector(".ol-con").value.trim(),cantidad:num(d.querySelector(".ol-q").value)||1,precio:num(d.querySelector(".ol-p").value),_el:d}})}
+function totOut(){const ls=lineasOut();let t=0;ls.forEach(l=>{const st=l.cantidad*l.precio;t+=st;l._el.querySelector(".ol-sub").textContent=fmt(st)});
+  $("outTotal").textContent=fmt(t);$("outCount").textContent=ls.length>1?ls.length+" artículos":"Artículo";
+  const tk=S.out.ticketTotal;$("outCheck").hidden=!tk;if(tk){const dif=Math.round((tk-t)*100)/100;$("outCheck").textContent=Math.abs(dif)<0.5?"✓ Cuadra con el total del ticket ("+fmt(tk)+")":"El ticket dice "+fmt(tk)+". Te "+(dif>0?"faltan ":"sobran ")+fmt(Math.abs(dif))+" por anotar."}}
 function openOut(){
-  const s=S.out;s.cat=C.categoriasGasto[0]||"Materia prima";s.amb=C.ambitos[0]||"Negocio";s.prov="";s.met=C.metodos[0]||"Efectivo";s.ticketUrl="";s.subiendo=false;
-  chips($("outCat"),C.categoriasGasto,s.cat,v=>{s.cat=v;$("outInsBox").hidden=v!=="Materia prima"});
+  const s=S.out;s.amb=C.ambitos[0]||"Negocio";s.prov="";s.met=C.metodos[0]||"Efectivo";s.ticketUrl="";s.subiendo=false;s.ticketTotal=0;
   chips($("outAmb"),C.ambitos.length?C.ambitos:["Negocio","Personal"],s.amb,v=>s.amb=v);
-  chips($("outProv"),C.proveedores,s.prov,v=>s.prov=v);
+  chips($("outProv"),C.proveedores,s.prov,v=>s.prov=s.prov===v?"":v);
   chips($("outMet"),C.metodos,s.met,v=>s.met=v);
-  const sel=$("outIns");sel.replaceChildren();sel.append(new Option("Elige el insumo…",""));C.insumos.forEach(i=>sel.append(new Option(i,i)));
-  $("outInsBox").hidden=s.cat!=="Materia prima";
-  $("outCant").value=1;$("outPrecio").value="";$("outTicket").value="";$("outNotas").value="";$("outFecha").value=hoyISO();$("outErr").hidden=true;
-  $("outImg").hidden=true;$("outPh").hidden=false;$("outTicketT").textContent="Tomar foto del ticket";$("outTicketS").textContent="Se guarda en tu Drive y leo el total por ti";$("outFoto").value="";
+  $("outLines").replaceChildren();lineaOut(null);
+  $("outTicket").value="";$("outNotas").value="";$("outFecha").value=hoyISO();$("outErr").hidden=true;
+  $("outImg").hidden=true;$("outPh").hidden=false;$("outTicketT").textContent="Tomar foto del ticket";$("outTicketS").textContent="Lo guardo en tu Drive y leo los artículos por ti";$("outFoto").value="";
   totOut();show("sheetOut");
 }
-stepper("outMinus","outPlus","outCant",1,totOut);$("outPrecio").oninput=totOut;
-function comprimir(file){return new Promise((ok,ko)=>{const img=new Image();const url=URL.createObjectURL(file);img.onload=()=>{const k=Math.min(1,1600/Math.max(img.width,img.height));
-  const c=document.createElement("canvas");c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext("2d").drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);ok(c.toDataURL("image/jpeg",.82))};img.onerror=ko;img.src=url})}
+$("outAdd").onclick=()=>{lineaOut(null);totOut()};
+function comprimir(file){return new Promise((ok,ko)=>{const img=new Image();const url=URL.createObjectURL(file);img.onload=()=>{const k=Math.min(1,1800/Math.max(img.width,img.height));
+  const c=document.createElement("canvas");c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext("2d").drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);ok(c.toDataURL("image/jpeg",.85))};img.onerror=ko;img.src=url})}
 $("outFoto").onchange=async()=>{
   const f=$("outFoto").files[0];if(!f)return;const s=S.out;
   try{
     const data=await comprimir(f);$("outImg").src=data;$("outImg").hidden=false;$("outPh").hidden=true;
-    $("outTicketT").textContent="Subiendo y leyendo…";$("outTicketS").textContent="Puedes ir llenando lo demás";s.subiendo=true;
+    $("outTicketT").textContent="Subiendo y leyendo…";$("outTicketS").textContent="Tarda unos segundos";s.subiendo=true;
     const r=await run("subirTicket",{data:data.split(",")[1],mime:"image/jpeg",fecha:$("outFecha").value});
     s.ticketUrl=r.url;s.subiendo=false;
     if(r.leido){
-      const bits=[];
-      if(r.total>0&&!num($("outPrecio").value)){$("outCant").value=1;$("outPrecio").value=r.total;totOut();bits.push("total "+fmt(r.total))}
-      if(r.fecha){$("outFecha").value=r.fecha;bits.push("fecha")}
-      if(r.proveedor){if(C.proveedores.indexOf(r.proveedor)<0)C.proveedores.push(r.proveedor);s.prov=r.proveedor;chips($("outProv"),C.proveedores,s.prov,v=>s.prov=v);bits.push(r.proveedor)}
-      $("outTicketT").textContent="Ticket guardado ✓";$("outTicketS").textContent=bits.length?"Leí: "+bits.join(", ")+". Revísalo.":"No pude leer el total, escríbelo tú.";
-    }else{$("outTicketT").textContent="Ticket guardado ✓";$("outTicketS").textContent="Escribe el total tú (la lectura automática no está activada).";}
+      if(r.fecha)$("outFecha").value=r.fecha;
+      if(r.proveedor){if(C.proveedores.indexOf(r.proveedor)<0)C.proveedores.push(r.proveedor);s.prov=r.proveedor;chips($("outProv"),C.proveedores,s.prov,v=>s.prov=s.prov===v?"":v)}
+      s.ticketTotal=r.total||0;
+      const vacias=lineasOut().every(l=>!l.precio);
+      if(r.items&&r.items.length&&vacias){$("outLines").replaceChildren();r.items.forEach(it=>lineaOut(Object.assign({leido:true},it)))}
+      else if(vacias&&r.total){$("outLines").replaceChildren();lineaOut({cantidad:1,precio:r.total})}
+      totOut();
+      $("outTicketT").textContent="Ticket guardado ✓";
+      $("outTicketS").textContent=r.items&&r.items.length?"Leí "+r.items.length+" artículos. Revisa categoría e insumo de cada uno.":r.total?"Leí el total, pero no los artículos. Sepáralos tú si quieres.":"No pude leerlo bien, llénalo tú.";
+    }else{$("outTicketT").textContent="Ticket guardado ✓";$("outTicketS").textContent="Llénalo tú (la lectura automática no está activada).";}
   }catch(e){s.subiendo=false;$("outTicketT").textContent="No se pudo subir la foto";$("outTicketS").textContent="Toca para intentar otra vez"}
 };
 $("formOut").addEventListener("submit",async e=>{
   e.preventDefault();const s=S.out;
   if(s.subiendo)return err("out","Espera a que termine de subir el ticket.");
-  const g={categoria:s.cat,insumo:s.cat==="Materia prima"?$("outIns").value:"",ambito:s.amb,proveedor:s.prov,cantidad:num($("outCant").value)||1,precio:num($("outPrecio").value),
-    metodo:s.met,fecha:$("outFecha").value,ticket:$("outTicket").value.trim(),ticketUrl:s.ticketUrl,notas:$("outNotas").value.trim()};
-  if(!(g.precio>0))return err("out","Escribe el precio.");
-  if(s.cat==="Materia prima"&&!g.insumo)return err("out","Elige el insumo para que se sume a tu inventario.");
-  await guardarMov("out","guardarGasto",g,"Egreso guardado en Compras");
+  const ls=lineasOut();if(!ls.length)return err("out","Agrega al menos un artículo.");
+  const sinP=ls.findIndex(l=>!(l.precio>0));if(sinP>=0)return err("out","Al artículo "+(sinP+1)+" le falta el precio.");
+  const sinI=ls.findIndex(l=>l.categoria==="Materia prima"&&!l.insumo);if(sinI>=0)return err("out","Elige el insumo del artículo "+(sinI+1)+" (así se suma a tu inventario).");
+  const g={ambito:s.amb,proveedor:s.prov,metodo:s.met,fecha:$("outFecha").value,ticket:$("outTicket").value.trim(),ticketUrl:s.ticketUrl,notas:$("outNotas").value.trim(),
+    lineas:ls.map(({_el,...l})=>l)};
+  await guardarMov("out","guardarGastos",g,ls.length>1?"Compra guardada ("+ls.length+" artículos)":"Compra guardada");
 });
+
+/* ---------- guardar y deshacer ---------- */
 async function guardarMov(k,fn,data,msg){
   const b=$(k+"Save");$(k+"Err").hidden=true;
-  try{await busy(b,"Guardando…",async()=>{const r=await run(fn,data);R=r.resumen;ultimo={hoja:r.hoja,fila:r.fila,inv:r.inv||null};if(r.inv)INV=null;renderResumen();hide();toast(msg,true)})}
+  try{await busy(b,"Guardando…",async()=>{const r=await run(fn,data);R=r.resumen;ultimo=r.movs;if(r.movs.some(m=>m.inv))INV=null;M=null;renderResumen();hide();toast(msg,true)})}
   catch(e){err(k,"No se pudo guardar: "+(e&&e.message||e))}
 }
 $("undo").onclick=async()=>{if(!ultimo)return;$("undo").hidden=true;$("toastMsg").textContent="Deshaciendo…";
-  try{const r=await run("deshacer",ultimo.hoja,ultimo.fila,ultimo.inv);R=r.resumen;if(ultimo.inv)INV=null;ultimo=null;renderResumen();toast("Listo, se borró de la hoja")}catch(e){toast("No se pudo deshacer")}};
+  try{const r=await run("deshacerVarios",ultimo);R=r.resumen;if(ultimo.some(m=>m.inv))INV=null;ultimo=null;M=null;renderResumen();toast("Listo, se borró de la hoja")}catch(e){toast("No se pudo deshacer")}};
 $("addIn").onclick=()=>openIn();$("addOut").onclick=openOut;
 
 /* ---------- PEDIDOS ---------- */
